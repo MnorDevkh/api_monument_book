@@ -1,11 +1,10 @@
 package com.example.monumentbook.service;
 
 import com.example.monumentbook.model.requests.CustomerRequest;
-import com.example.monumentbook.model.requests.ProductRequest;
+import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.BookRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -27,7 +26,7 @@ public interface BookService {
     ResponseEntity<?> getAllPurchase();
     ResponseEntity<?> deletePurchase(Integer id);
     ResponseEntity<?> processCheckoutById(List<CustomerRequest> customerRequest);
-    ResponseEntity<?> updatePurchase(Integer id,ProductRequest productRequest);
-    ResponseEntity<?> purchaseById(ProductRequest productRequest);
+    ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
+    ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest);
     ResponseEntity<?> getPurchaseById(Integer id);
 }

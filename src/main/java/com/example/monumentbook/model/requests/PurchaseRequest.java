@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductRequest {
+public class PurchaseRequest {
     private int qty;
     private float cost;
     private float tax;

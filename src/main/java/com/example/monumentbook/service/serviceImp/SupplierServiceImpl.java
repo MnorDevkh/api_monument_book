@@ -2,10 +2,12 @@ package com.example.monumentbook.service.serviceImp;
 
 import com.example.monumentbook.model.*;
 import com.example.monumentbook.model.dto.BookDto;
+import com.example.monumentbook.model.dto.PurchaseDto;
 import com.example.monumentbook.model.requests.SupplierRequest;
 import com.example.monumentbook.model.responses.SupplierResponse;
 import com.example.monumentbook.repository.BookRepository;
 import com.example.monumentbook.repository.BookSupplierRepository;
+import com.example.monumentbook.repository.ProductRepository;
 import com.example.monumentbook.repository.SupplierRepository;
 import com.example.monumentbook.service.SupplierService;
 import com.example.monumentbook.utilities.response.ResponseObject;
@@ -23,7 +25,9 @@ import java.util.Optional;
 public class SupplierServiceImpl implements SupplierService {
     private final SupplierRepository supplierRepository;
     private final BookRepository bookRepository;
+    private final ProductRepository productRepository;
     private final BookSupplierRepository bookSupplierRepository;
+
     @Override
     public ResponseEntity<?> addSupplier(SupplierRequest supplierRequest) {
         ResponseObject res = new ResponseObject();
@@ -49,6 +53,7 @@ public class SupplierServiceImpl implements SupplierService {
             List<SupplierResponse> supplierResponses = new ArrayList<>();
             for (Supplier supplier : suppliers){
                 Optional<Supplier> supplierOptional = supplierRepository.findById(supplier.getId());
+                System.out.println(supplierOptional+" supplierOptional");
                 if(supplierOptional.isPresent() && !supplierOptional.get().isDeleted()){
                     SupplierResponse supplierResponse = supplierResponse(supplierOptional.get());
                     supplierResponses.add(supplierResponse);
@@ -156,7 +161,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     private SupplierResponse supplierResponse(Supplier supplier) {
         List<SupplierResponse> supplierResponses = new ArrayList<>();
-        List<BookDto> books = bookFlags(supplier);
+        List<PurchaseDto> purchaseDtoList = productFlags(supplier);
         return SupplierResponse.builder()
                 .id(supplier.getId())
                 .name(supplier.getName())
@@ -164,17 +169,37 @@ public class SupplierServiceImpl implements SupplierService {
                 .phone(supplier.getPhone())
                 .email(supplier.getEmail())
                 .address(supplier.getAddress())
-                .books(books)
+                .purchaseDtos(purchaseDtoList)
                 .date(LocalDate.now())
                 .build();
     }
-    private List<BookDto> bookFlags(Supplier supplier){
-        List<BookSupplier> bookSuppliers = bookSupplierRepository.findAllBySupplier(supplier);
-        List<BookDto> authorBooks = new ArrayList<>();
-        for(BookSupplier bookSupplier : bookSuppliers){
-            Optional<Book> bookOptional = bookRepository.findByIdAndDeletedFalse(bookSupplier.getBook().getId());
-            if(bookOptional.isPresent()){
-                BookDto book = BookDto.builder()
+    private List<PurchaseDto> productFlags(Supplier supplier){
+        System.out.println(supplier+"supplier");
+        List<Purchase> purchaseList = productRepository.findAllBySupplier(supplier);
+        List<PurchaseDto> purchaseDtoList = new ArrayList<>();
+
+        for(Purchase purchase : purchaseList){
+            Optional<Purchase> productOptional = productRepository.findById(purchase.getId());
+            if(productOptional.isPresent()){
+              BookDto books = bookFlags(productOptional.get());
+              PurchaseDto purchaseDto = PurchaseDto.builder()
+                      .id(productOptional.get().getId())
+                      .tax(productOptional.get().getTax())
+                      .cost(productOptional.get().getCost())
+                      .qty(productOptional.get().getQty())
+                      .invoice(productOptional.get().getInvoice())
+                      .book(books)
+                      .build();
+              purchaseDtoList.add(purchaseDto);
+            }
+        }
+        return purchaseDtoList;
+    }
+    private BookDto bookFlags(Purchase purchase){
+
+            Optional<Book> bookOptional = bookRepository.findById(purchase.getBook().getId());
+            if(bookOptional.isPresent()) {
+                BookDto bookDto = BookDto.builder()
                         .id(bookOptional.get().getId())
                         .title(bookOptional.get().getTitle())
                         .isbn(bookOptional.get().getIsbn())
@@ -184,9 +209,9 @@ public class SupplierServiceImpl implements SupplierService {
                         .publishDate(bookOptional.get().getPublishDate())
                         .publisher(bookOptional.get().getPublisher())
                         .build();
-                authorBooks.add(book);
+                return bookDto;
             }
-        }
-        return authorBooks;
+        return null;
     }
+
 }

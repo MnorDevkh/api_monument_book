@@ -1,10 +1,7 @@
 package com.example.monumentbook.model.responses;
 
-import com.example.monumentbook.model.Book;
-import com.example.monumentbook.model.Supplier;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.SupplierDto;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductResponse {
+public class PurchaseResponse {
     private Integer id;
     private int qty;
     private float cost;

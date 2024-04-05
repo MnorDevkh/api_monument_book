@@ -2,12 +2,11 @@ package com.example.monumentbook.controller;
 
 import com.example.monumentbook.model.requests.BookRequest;
 import com.example.monumentbook.model.requests.CustomerRequest;
-import com.example.monumentbook.model.requests.ProductRequest;
+import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.Valid;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,8 +50,8 @@ public class BookController {
 
     @PostMapping("/addPurchase")
     @Operation(summary = "add product by Id")
-    public ResponseEntity<?> addProductByName(@RequestBody ProductRequest productRequest){
-      return bookService.purchaseById(productRequest);
+    public ResponseEntity<?> addProductByName(@RequestBody PurchaseRequest purchaseRequest){
+      return bookService.purchaseById(purchaseRequest);
     }
     @PostMapping("/PurchaseCheckout")
     @Operation(summary = "sell book")
@@ -117,8 +116,8 @@ public class BookController {
     }
     @PutMapping("/updatePurchase")
     @Operation(summary = "update import by vendor id")
-    public ResponseEntity<?> UpdateImport(@Param(value = "vendor id")Integer id, @RequestBody ProductRequest productRequest ){
-        return bookService.updatePurchase(id,productRequest);
+    public ResponseEntity<?> UpdateImport(@Param(value = "vendor id")Integer id, @RequestBody PurchaseRequest purchaseRequest){
+        return bookService.updatePurchase(id, purchaseRequest);
     }
     @GetMapping("/getPurchaseById")
     @Operation(summary = "get import vendor by id")
