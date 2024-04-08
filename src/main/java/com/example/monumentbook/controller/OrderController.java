@@ -1,5 +1,7 @@
 package com.example.monumentbook.controller;
 
+import com.example.monumentbook.model.Order;
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,8 +27,8 @@ public class OrderController {
         return orderService.allCurrentOrder(page, size);
     }
     @PostMapping("/new-order")
-    public ResponseEntity<?> newOrder(@RequestBody List<OrderRequest> orderRequests){
-        return orderService.newOrder(orderRequests);
+    public ResponseEntity<?> newOrder(@RequestBody  OrderRequest orderRequest){
+        return orderService.newOrder(orderRequest);
     }
 
 }

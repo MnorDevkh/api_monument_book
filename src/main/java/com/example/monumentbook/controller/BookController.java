@@ -1,7 +1,7 @@
 package com.example.monumentbook.controller;
 
 import com.example.monumentbook.model.requests.BookRequest;
-import com.example.monumentbook.model.requests.OrderRequest;
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.service.BookService;
@@ -55,8 +55,8 @@ public class BookController {
     }
     @PostMapping("/PurchaseCheckout")
     @Operation(summary = "sell book")
-    private ResponseEntity<?> processCheckout(@RequestBody List<OrderRequest> orderRequest){
-        return  bookService.processCheckoutById(orderRequest);
+    private ResponseEntity<?> processCheckout(@RequestBody List<OrderItemRequest> orderItemRequest){
+        return  bookService.processCheckoutById(orderItemRequest);
     }
 
     @GetMapping("/get-book-of-the-week")

@@ -5,7 +5,7 @@ import com.example.monumentbook.model.dto.AuthorDto;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.CategoryDto;
 import com.example.monumentbook.model.requests.BookRequest;
-import com.example.monumentbook.model.requests.OrderRequest;
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.model.responses.ApiResponse;
@@ -42,7 +42,7 @@ public class BookServiceImp implements BookService {
     private final BookCategoryRepository bookCategoryRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
 
 
@@ -464,7 +464,7 @@ public class BookServiceImp implements BookService {
     }
 
     @Override
-    public ResponseEntity<?> processCheckoutById(List<OrderRequest> orderRequests) {
+    public ResponseEntity<?> processCheckoutById(List<OrderItemRequest> orderItemRequests) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser;
         if (authentication.getPrincipal() instanceof User) {
@@ -476,25 +476,25 @@ public class BookServiceImp implements BookService {
 
         List<Object> responses = new ArrayList<>(); // List to store individual responses
 
-        for (OrderRequest orderRequest : orderRequests) {
-            ResponseEntity<?> response = processCustomerRequest(currentUser, orderRequest);
+        for (OrderItemRequest orderItemRequest : orderItemRequests) {
+            ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest);
             responses.add(response.getBody()); // Add the response body to the list
         }
         return ResponseEntity.ok(responses); // Return the list of responses
     }
 
-    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderRequest orderRequest) {
+    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderItemRequest orderItemRequest) {
 //        try {
-//            Integer id = orderRequest.getProductId();
+//            Integer id = orderItemRequest.getProductId();
 //            Optional<Book> bookOptional = bookRepository.findById(id);
 //            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
 //                Book book = bookOptional.get();
-//                int requestedQty = orderRequest.getQty();
+//                int requestedQty = orderItemRequest.getQty();
 //                int availableQty = book.getQty();
 //                if (requestedQty <= availableQty) {
 //                    book.setQty(availableQty - requestedQty);
 //                    bookRepository.save(book);
-//                    Order order = Order.builder()
+//                    OrderItem order = OrderItem.builder()
 //                            .bookId(bookOptional.get())
 //                            .userId(currentUser)
 //                            .qty(requestedQty)

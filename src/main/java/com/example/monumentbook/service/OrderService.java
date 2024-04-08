@@ -1,5 +1,6 @@
 package com.example.monumentbook.service;
 
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.OrderRequest;
 import org.springframework.http.ResponseEntity;
 
@@ -9,5 +10,5 @@ public interface OrderService {
     ResponseEntity<?> allCustomerOrder(Integer page, Integer size);
     ResponseEntity<?> allCurrentOrder(Integer page, Integer size);
 
-    ResponseEntity<?> newOrder(List<OrderRequest> orderRequests);
+    ResponseEntity<?> newOrder(OrderRequest orderRequest);
 }

@@ -1,6 +1,6 @@
 package com.example.monumentbook.service;
 
-import com.example.monumentbook.model.requests.OrderRequest;
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.BookRequest;
 import com.example.monumentbook.model.requests.RequestById;
@@ -25,7 +25,7 @@ public interface BookService {
     ResponseEntity<?> deleteNewArrival(RequestById requestById);
     ResponseEntity<?> getAllPurchase();
     ResponseEntity<?> deletePurchase(Integer id);
-    ResponseEntity<?> processCheckoutById(List<OrderRequest> orderRequest);
+    ResponseEntity<?> processCheckoutById(List<OrderItemRequest> orderItemRequest);
     ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
     ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest);
     ResponseEntity<?> getPurchaseById(Integer id);

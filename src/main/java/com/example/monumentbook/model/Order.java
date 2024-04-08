@@ -1,5 +1,6 @@
 package com.example.monumentbook.model;
 
+import com.example.monumentbook.enums.Action;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,12 +23,10 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY )
     @JoinColumn(name = "userId")
     private User userId;
-    @ManyToOne(fetch = FetchType.LAZY )
-    @JoinColumn(name = "bookId")
-    private Book bookId;
     private int qty;
     private float price;
     private LocalDate date;
     private boolean deleted;
-    private boolean action;
+    private boolean type;
+    private Action action;
 }

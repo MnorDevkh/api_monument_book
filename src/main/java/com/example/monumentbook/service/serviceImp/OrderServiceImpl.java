@@ -1,15 +1,20 @@
 package com.example.monumentbook.service.serviceImp;
 
+import com.example.monumentbook.enums.Action;
 import com.example.monumentbook.model.Book;
-import com.example.monumentbook.model.Cart;
 import com.example.monumentbook.model.Order;
+import com.example.monumentbook.model.OrderItem;
 import com.example.monumentbook.model.User;
 import com.example.monumentbook.model.dto.BookDto;
+import com.example.monumentbook.model.dto.OrderItemDto;
 import com.example.monumentbook.model.dto.UserDto;
+import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.model.responses.ApiResponse;
+import com.example.monumentbook.model.responses.OrderItemResponse;
 import com.example.monumentbook.model.responses.OrderResponse;
 import com.example.monumentbook.repository.BookRepository;
+import com.example.monumentbook.repository.OrderItemRepository;
 import com.example.monumentbook.repository.OrderRepository;
 import com.example.monumentbook.repository.UserRepository;
 import com.example.monumentbook.service.OrderService;
@@ -19,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.jaxb.SpringDataJaxb;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,33 +39,34 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final OrderRepository orderRepository;
 
     @Override
     public ResponseEntity<?> allCustomerOrder(Integer page, Integer size) {
 //        ResponseObject res = new ResponseObject(); // Move inside the try block
         try {
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
-            Page<Order> pageResult = orderRepository.findAll(pageable);
-            List<OrderResponse> orderList = new ArrayList<>();
-            for(Order order : pageResult){
-                Optional<User> user = userRepository.findById((int) order.getUserId().getId());
-                UserDto userDto = user.map(this::buildUserDto).orElse(null);
-                Optional<Book> book = bookRepository.findById(order.getBookId().getId());
+            Page<OrderItem> pageResult = orderItemRepository.findAll(pageable);
+            List<OrderItemResponse> orderList = new ArrayList<>();
+            for(OrderItem orderItem : pageResult){
+//                Optional<User> user = userRepository.findById((int) orderItem.getUserId().getId());
+//                UserDto userDto = user.map(this::buildUserDto).orElse(null);
+                Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
                 BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-                Optional<Order> customerOrderOptional = orderRepository.findById(order.getId());
+                Optional<OrderItem> customerOrderOptional = orderItemRepository.findById(orderItem.getId());
                 if (customerOrderOptional.isPresent()){
-                    OrderResponse orderResponse = OrderResponse.builder()
+                    OrderItemResponse orderItemResponse = OrderItemResponse.builder()
                             .id(customerOrderOptional.get().getId())
                             .book(bookDto)
-                            .user(userDto)
+
                             .price(customerOrderOptional.get().getPrice())
                             .qty(customerOrderOptional.get().getQty())
                             .date(customerOrderOptional.get().getDate())
                             .build();
-                    orderList.add(orderResponse);
+                    orderList.add(orderItemResponse);
                 }
                 ApiResponse res = new ApiResponse(true, "Fetch books successful!", orderList, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
                 return ResponseEntity.ok(res);
@@ -79,27 +86,38 @@ public class OrderServiceImpl implements OrderService {
             User currentUser = (User) authentication.getPrincipal();
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
             Page<Order> pageResult = orderRepository.findByUserIdIdAndDeletedFalse(currentUser.getId(), pageable);
+
+
+            System.out.println(pageResult+ "pageResult");
             List<OrderResponse> orderResponseList = new ArrayList<>();
+
             for (Order order : pageResult) {
                 Optional<User> user = userRepository.findById((int) order.getUserId().getId());
                 UserDto userDto = user.map(this::buildUserDto).orElse(null);
-                Optional<Book> book = bookRepository.findById(order.getBookId().getId());
-                BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-                Optional<Order> customerOrderOptional = orderRepository.findById(order.getId());
-                if (customerOrderOptional.isPresent()) {
-                    OrderResponse orderResponse = OrderResponse.builder()
-                            .id(customerOrderOptional.get().getId())
+
+                List<OrderItemDto> orderItemResponses = new ArrayList<>();
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+                System.out.println("orderItems" + orderItems);
+                for (OrderItem orderItem : orderItems) {
+                    Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
+                    BookDto bookDto = book.map(this::buildBookDto).orElse(null);
+
+                    OrderItemDto orderItemDto = OrderItemDto.builder()
+                            .id(orderItem.getId())
                             .book(bookDto)
-                            .user(userDto)
-                            .price(customerOrderOptional.get().getPrice())
-                            .qty(customerOrderOptional.get().getQty())
-                            .date(customerOrderOptional.get().getDate())
+                            .price(orderItem.getPrice())
+                            .qty(orderItem.getQty())
                             .build();
-                    orderResponseList.add(orderResponse);
+                    orderItemResponses.add(orderItemDto);
                 }
+
+                OrderResponse orderResponse = orderResponseFlags(order);
+                orderResponse.setOrderItem(orderItemResponses);
+                orderResponse.setUser(userDto);
+                orderResponseList.add(orderResponse);
             }
 
-            ApiResponse res = new ApiResponse(true, "Fetch books successful!", orderResponseList, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponseList, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             ResponseObject res = new ResponseObject(); // Create a new object for error handling
@@ -110,8 +128,10 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+
+
     @Override
-    public ResponseEntity<?> newOrder(List<OrderRequest> orderRequests) {
+    public ResponseEntity<?> newOrder(OrderRequest orderRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser;
         if (authentication.getPrincipal() instanceof User) {
@@ -120,35 +140,50 @@ public class OrderServiceImpl implements OrderService {
             // Handle the case when the principal is not an instance of User
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
         }
-        List<Object> responses = new ArrayList<>(); // List to store individual responses
+        Order orderObj = Order.builder()
+                .action(Action.Padding)
+                .userId(currentUser)
+                .date(LocalDate.now())
+                .build();
+        orderRepository.save(orderObj);
+        Order order = Order.builder()
+                .id(orderObj.getId())
+                .build();
+        List<OrderItemDto> orderItemResponses = new ArrayList<>(); // List to store individual responses
 
-        for (OrderRequest orderRequest : orderRequests) {
-            ResponseEntity<?> response = processCustomerRequest(currentUser, orderRequest);
-            responses.add(response.getBody()); // Add the response body to the list
+        for (OrderItemRequest orderItemRequest : orderRequest.getOrderItem()) {
+            ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest, order);
+            OrderItemDto orderItemResponse = (OrderItemDto) response.getBody();
+            orderItemResponses.add(orderItemResponse);
         }
-        return ResponseEntity.ok(responses); // Return the list of responses
+        // Construct OrderResponse using orderResponseFlags method
+        OrderResponse orderResponse = orderResponseFlags(order);
+        orderResponse.setOrderItem(orderItemResponses);
+
+        return ResponseEntity.ok(orderResponse); // Return the list of responses
     }
-    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderRequest orderRequest) {
+    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderItemRequest orderItemRequest, Order order) {
         try {
-            Integer id = orderRequest.getProductId();
+            Integer id = orderItemRequest.getProductId();
             Optional<Book> bookOptional = bookRepository.findById(id);
+//            Optional<Order> orderOptional = orderRepository.findById(orderItemResponses.getId());
             if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
                 Book book = bookOptional.get();
-//                int requestedQty = orderRequest.getQty();
+//                int requestedQty = orderItemRequest.getQty();
 //                int availableQty = book.getQty();
 //                if (requestedQty <= availableQty) {
 //                    book.setQty(availableQty - requestedQty);
 //                    bookRepository.save(book);
-                    Order order = Order.builder()
-                            .bookId(bookOptional.get())
-                            .userId(currentUser)
-                            .qty(orderRequest.getQty())
-                            .price(book.getPrice())
-                            .date(LocalDate.now())
-                            .build();
-                    orderRepository.save(order);
-                    OrderResponse orderResponse = orderResponseFlags(order);
-                    return ResponseEntity.ok(orderResponse);
+                OrderItem orderItem = OrderItem.builder()
+                        .bookId(bookOptional.get())
+                        .qty(orderItemRequest.getQty())
+                        .price(book.getPrice())
+                        .date(LocalDate.now())
+                        .order(order)
+                        .build();
+                orderItemRepository.save(orderItem);
+                OrderItemDto orderItemResponse = orderItemResponseDroFlags(orderItem);
+                return ResponseEntity.ok(orderItemResponse);
 //                    try {
 //                        ResponseObject res = new ResponseObject();
 //                        Optional<Cart> cartOptional = cartRepository.findById(id);
@@ -211,14 +246,22 @@ public class OrderServiceImpl implements OrderService {
                 .email(user.getEmail())
                 .build();
     }
-    private OrderResponse orderResponseFlags(Order order){
+    private OrderItemDto orderItemResponseDroFlags(OrderItem orderItem){
+        return OrderItemDto.builder()
+                .id(orderItem.getId())
+                .book(orderItem.getBookId().toDto())
+//                .date(orderItem.getDate())
+                .qty(orderItem.getQty())
+                .price(orderItem.getPrice())
+
+                .build();
+    }
+    private OrderResponse orderResponseFlags(Order order) {
         return OrderResponse.builder()
                 .id(order.getId())
-                .book(order.getBookId().toDto())
+                .type(order.isType())
+                .action(order.getAction())
                 .date(order.getDate())
-                .qty(order.getQty())
-                .price(order.getPrice())
-                .user(order.getUserId().toDto())
                 .build();
     }
 
