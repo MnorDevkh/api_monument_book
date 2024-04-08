@@ -150,6 +150,8 @@ public class OrderServiceImpl implements OrderService {
                 .id(orderObj.getId())
                 .build();
         List<OrderItemDto> orderItemResponses = new ArrayList<>(); // List to store individual responses
+//        Optional<User> user = userRepository.findById((int) order.getUserId().getId());
+//        UserDto userDto = user.map(this::buildUserDto).orElse(null);
 
         for (OrderItemRequest orderItemRequest : orderRequest.getOrderItem()) {
             ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest, order);
@@ -157,11 +159,19 @@ public class OrderServiceImpl implements OrderService {
             orderItemResponses.add(orderItemResponse);
         }
         // Construct OrderResponse using orderResponseFlags method
-        OrderResponse orderResponse = orderResponseFlags(order);
+        OrderResponse orderResponse = orderResponseFlags(orderObj);
         orderResponse.setOrderItem(orderItemResponses);
+//        orderResponse.setUser(userDto);
 
         return ResponseEntity.ok(orderResponse); // Return the list of responses
     }
+
+    @Override
+    public ResponseEntity<?> conform(Integer id) {
+        
+        return null;
+    }
+
     private ResponseEntity<?> processCustomerRequest(User currentUser, OrderItemRequest orderItemRequest, Order order) {
         try {
             Integer id = orderItemRequest.getProductId();

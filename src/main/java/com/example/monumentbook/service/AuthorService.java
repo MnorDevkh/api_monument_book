@@ -12,4 +12,5 @@ public interface AuthorService {
     ResponseEntity<?> deleted(Integer id);
     ResponseEntity<?> addFeature(Integer id);
     ResponseEntity<?> getFeature(Integer page, Integer size);
+
 }

@@ -11,4 +11,5 @@ public interface OrderService {
     ResponseEntity<?> allCurrentOrder(Integer page, Integer size);
 
     ResponseEntity<?> newOrder(OrderRequest orderRequest);
+    ResponseEntity<?> conform(Integer id);
 }

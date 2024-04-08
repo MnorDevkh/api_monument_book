@@ -12,4 +12,5 @@ public interface BookmarksService {
 //    ResponseEntity<?> updateCartById(Integer id, CartUpdateRequest cartRequest);
     ResponseEntity<?> deleteCartById(Integer id);
     ResponseEntity<?> findBookmarksByUser(Integer page, Integer size);
+
 }

@@ -162,6 +162,8 @@ public class BookmarksServiceImpl implements BookmarksService {
                 .publisher(book.getPublisher())
                 .description(book.getDescription())
                 .title(book.getTitle())
+                .qty(book.getQty())
+                .price(book.getPrice())
                 .coverImg(book.getCoverImg())
                 .publishDate(book.getPublishDate())
                 .isbn(book.getIsbn())

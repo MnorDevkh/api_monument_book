@@ -5,6 +5,7 @@ import com.example.monumentbook.model.OrderItem;
 import com.example.monumentbook.model.User;
 import com.example.monumentbook.model.dto.OrderItemDto;
 import com.example.monumentbook.model.dto.UserDto;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,5 +26,6 @@ public class OrderResponse {
     private boolean deleted;
     private boolean type;
     private Action action;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserDto user;
 }
