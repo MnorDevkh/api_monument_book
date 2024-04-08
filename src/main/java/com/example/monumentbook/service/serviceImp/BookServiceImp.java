@@ -5,7 +5,7 @@ import com.example.monumentbook.model.dto.AuthorDto;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.CategoryDto;
 import com.example.monumentbook.model.requests.BookRequest;
-import com.example.monumentbook.model.requests.CustomerRequest;
+import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.model.responses.ApiResponse;
@@ -42,7 +42,7 @@ public class BookServiceImp implements BookService {
     private final BookCategoryRepository bookCategoryRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
-    private final OrderRepository customerRepository;
+    private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
 
 
@@ -464,7 +464,7 @@ public class BookServiceImp implements BookService {
     }
 
     @Override
-    public ResponseEntity<?> processCheckoutById(List<CustomerRequest> customerRequests) {
+    public ResponseEntity<?> processCheckoutById(List<OrderRequest> orderRequests) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser;
         if (authentication.getPrincipal() instanceof User) {
@@ -476,70 +476,71 @@ public class BookServiceImp implements BookService {
 
         List<Object> responses = new ArrayList<>(); // List to store individual responses
 
-        for (CustomerRequest customerRequest : customerRequests) {
-            ResponseEntity<?> response = processCustomerRequest(currentUser, customerRequest);
+        for (OrderRequest orderRequest : orderRequests) {
+            ResponseEntity<?> response = processCustomerRequest(currentUser, orderRequest);
             responses.add(response.getBody()); // Add the response body to the list
         }
         return ResponseEntity.ok(responses); // Return the list of responses
     }
 
-    private ResponseEntity<?> processCustomerRequest(User currentUser, CustomerRequest customerRequest) {
-        try {
-            Integer id = customerRequest.getProductId();
-            Optional<Book> bookOptional = bookRepository.findById(id);
-            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
-                Book book = bookOptional.get();
-                int requestedQty = customerRequest.getQty();
-                int availableQty = book.getQty();
-                if (requestedQty <= availableQty) {
-                    book.setQty(availableQty - requestedQty);
-                    bookRepository.save(book);
-                    CustomerOrder customerOrder = CustomerOrder.builder()
-                            .bookId(bookOptional.get())
-                            .userId(currentUser)
-                            .qty(requestedQty)
-                            .price(book.getPrice())
-                            .date(LocalDate.now())
-                            .build();
-                    customerRepository.save(customerOrder);
-                    try {
-                        ResponseObject res = new ResponseObject();
-                        Optional<Cart> cartOptional = cartRepository.findById(id);
-                        if (cartOptional.isPresent()) {
-                            Cart cart = cartOptional.get();
-                            cartRepository.delete(cart);
-                            res.setMessage("Deleted cart with id " + id);
-                            res.setStatus(true);
-                            res.setData(null);
-                            return ResponseEntity.ok(res);
-                        } else {
-                            res.setMessage("Cart with id " + id + " not found");
-                            res.setStatus(false);
-                            res.setData(null);
-                            return ResponseEntity.notFound().build();
-                        }
-                    } catch (Exception e) {
-                        ResponseObject res = new ResponseObject();
-                        res.setMessage("Failed to delete cart with id " + id);
-                        res.setStatus(false);
-                        res.setData(e);
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-                    }
-
-                } else {
-                    ResponseObject res = new ResponseObject();
-                    res.setMessage("Requested quantity exceeds available quantity");
-                    res.setStatus(false);
-                    res.setData(null);
-
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found or deleted");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderRequest orderRequest) {
+//        try {
+//            Integer id = orderRequest.getProductId();
+//            Optional<Book> bookOptional = bookRepository.findById(id);
+//            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
+//                Book book = bookOptional.get();
+//                int requestedQty = orderRequest.getQty();
+//                int availableQty = book.getQty();
+//                if (requestedQty <= availableQty) {
+//                    book.setQty(availableQty - requestedQty);
+//                    bookRepository.save(book);
+//                    Order order = Order.builder()
+//                            .bookId(bookOptional.get())
+//                            .userId(currentUser)
+//                            .qty(requestedQty)
+//                            .price(book.getPrice())
+//                            .date(LocalDate.now())
+//                            .build();
+//                    orderRepository.save(order);
+//                    try {
+//                        ResponseObject res = new ResponseObject();
+//                        Optional<Cart> cartOptional = cartRepository.findById(id);
+//                        if (cartOptional.isPresent()) {
+//                            Cart cart = cartOptional.get();
+//                            cartRepository.delete(cart);
+//                            res.setMessage("Deleted cart with id " + id);
+//                            res.setStatus(true);
+//                            res.setData(null);
+//                            return ResponseEntity.ok(res);
+//                        } else {
+//                            res.setMessage("Cart with id " + id + " not found");
+//                            res.setStatus(false);
+//                            res.setData(null);
+//                            return ResponseEntity.notFound().build();
+//                        }
+//                    } catch (Exception e) {
+//                        ResponseObject res = new ResponseObject();
+//                        res.setMessage("Failed to delete cart with id " + id);
+//                        res.setStatus(false);
+//                        res.setData(e);
+//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+//                    }
+//
+//                } else {
+//                    ResponseObject res = new ResponseObject();
+//                    res.setMessage("Requested quantity exceeds available quantity");
+//                    res.setStatus(false);
+//                    res.setData(null);
+//
+//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+//                }
+//            } else {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found or deleted");
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+        return null;
     }
 
 

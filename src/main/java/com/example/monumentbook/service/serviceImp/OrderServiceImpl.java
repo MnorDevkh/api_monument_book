@@ -1,11 +1,12 @@
 package com.example.monumentbook.service.serviceImp;
 
 import com.example.monumentbook.model.Book;
-import com.example.monumentbook.model.Bookmarks;
-import com.example.monumentbook.model.CustomerOrder;
+import com.example.monumentbook.model.Cart;
+import com.example.monumentbook.model.Order;
 import com.example.monumentbook.model.User;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.UserDto;
+import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.model.responses.ApiResponse;
 import com.example.monumentbook.model.responses.OrderResponse;
 import com.example.monumentbook.repository.BookRepository;
@@ -24,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,14 +42,14 @@ public class OrderServiceImpl implements OrderService {
 //        ResponseObject res = new ResponseObject(); // Move inside the try block
         try {
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
-            Page<CustomerOrder> pageResult = orderRepository.findAll(pageable);
+            Page<Order> pageResult = orderRepository.findAll(pageable);
             List<OrderResponse> orderList = new ArrayList<>();
-            for(CustomerOrder customerOrder: pageResult){
-                Optional<User> user = userRepository.findById((int)customerOrder.getUserId().getId());
+            for(Order order : pageResult){
+                Optional<User> user = userRepository.findById((int) order.getUserId().getId());
                 UserDto userDto = user.map(this::buildUserDto).orElse(null);
-                Optional<Book> book = bookRepository.findById(customerOrder.getBookId().getId());
+                Optional<Book> book = bookRepository.findById(order.getBookId().getId());
                 BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-                Optional<CustomerOrder> customerOrderOptional = orderRepository.findById(customerOrder.getId());
+                Optional<Order> customerOrderOptional = orderRepository.findById(order.getId());
                 if (customerOrderOptional.isPresent()){
                     OrderResponse orderResponse = OrderResponse.builder()
                             .id(customerOrderOptional.get().getId())
@@ -76,14 +78,14 @@ public class OrderServiceImpl implements OrderService {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             User currentUser = (User) authentication.getPrincipal();
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
-            Page<CustomerOrder> pageResult = orderRepository.findByUserIdIdAndDeletedFalse(currentUser.getId(), pageable);
+            Page<Order> pageResult = orderRepository.findByUserIdIdAndDeletedFalse(currentUser.getId(), pageable);
             List<OrderResponse> orderResponseList = new ArrayList<>();
-            for (CustomerOrder customerOrder : pageResult) {
-                Optional<User> user = userRepository.findById((int)customerOrder.getUserId().getId());
+            for (Order order : pageResult) {
+                Optional<User> user = userRepository.findById((int) order.getUserId().getId());
                 UserDto userDto = user.map(this::buildUserDto).orElse(null);
-                Optional<Book> book = bookRepository.findById(customerOrder.getBookId().getId());
+                Optional<Book> book = bookRepository.findById(order.getBookId().getId());
                 BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-                Optional<CustomerOrder> customerOrderOptional = orderRepository.findById(customerOrder.getId());
+                Optional<Order> customerOrderOptional = orderRepository.findById(order.getId());
                 if (customerOrderOptional.isPresent()) {
                     OrderResponse orderResponse = OrderResponse.builder()
                             .id(customerOrderOptional.get().getId())
@@ -106,7 +108,89 @@ public class OrderServiceImpl implements OrderService {
             res.setData(null);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
-    }private BookDto buildBookDto(Book book) {
+    }
+
+    @Override
+    public ResponseEntity<?> newOrder(List<OrderRequest> orderRequests) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser;
+        if (authentication.getPrincipal() instanceof User) {
+            currentUser = (User) authentication.getPrincipal();
+        } else {
+            // Handle the case when the principal is not an instance of User
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
+        }
+        List<Object> responses = new ArrayList<>(); // List to store individual responses
+
+        for (OrderRequest orderRequest : orderRequests) {
+            ResponseEntity<?> response = processCustomerRequest(currentUser, orderRequest);
+            responses.add(response.getBody()); // Add the response body to the list
+        }
+        return ResponseEntity.ok(responses); // Return the list of responses
+    }
+    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderRequest orderRequest) {
+        try {
+            Integer id = orderRequest.getProductId();
+            Optional<Book> bookOptional = bookRepository.findById(id);
+            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
+                Book book = bookOptional.get();
+//                int requestedQty = orderRequest.getQty();
+//                int availableQty = book.getQty();
+//                if (requestedQty <= availableQty) {
+//                    book.setQty(availableQty - requestedQty);
+//                    bookRepository.save(book);
+                    Order order = Order.builder()
+                            .bookId(bookOptional.get())
+                            .userId(currentUser)
+                            .qty(orderRequest.getQty())
+                            .price(book.getPrice())
+                            .date(LocalDate.now())
+                            .build();
+                    orderRepository.save(order);
+                    OrderResponse orderResponse = orderResponseFlags(order);
+                    return ResponseEntity.ok(orderResponse);
+//                    try {
+//                        ResponseObject res = new ResponseObject();
+//                        Optional<Cart> cartOptional = cartRepository.findById(id);
+//                        if (cartOptional.isPresent()) {
+//                            Cart cart = cartOptional.get();
+//                            cartRepository.delete(cart);
+//                            res.setMessage("Deleted cart with id " + id);
+//                            res.setStatus(true);
+//                            res.setData(null);
+//                            return ResponseEntity.ok(res);
+//                        } else {
+//                            res.setMessage("Cart with id " + id + " not found");
+//                            res.setStatus(false);
+//                            res.setData(null);
+//                            return ResponseEntity.notFound().build();
+//                        }
+//                    } catch (Exception e) {
+//                        ResponseObject res = new ResponseObject();
+//                        res.setMessage("Failed to delete cart with id " + id);
+//                        res.setStatus(false);
+//                        res.setData(e);
+//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+//                    }
+
+//                } else {
+//                    ResponseObject res = new ResponseObject();
+//                    res.setMessage("Requested quantity exceeds available quantity");
+//                    res.setStatus(false);
+//                    res.setData(null);
+//
+//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+//                }
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found or deleted");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+
+    }
+
+    private BookDto buildBookDto(Book book) {
         return BookDto.builder()
                 .id(book.getId())
                 .publisher(book.getPublisher())
@@ -125,6 +209,16 @@ public class OrderServiceImpl implements OrderService {
                 .phoneNumber(user.getPhoneNumber())
                 .coverImage(user.getCoverImg())
                 .email(user.getEmail())
+                .build();
+    }
+    private OrderResponse orderResponseFlags(Order order){
+        return OrderResponse.builder()
+                .id(order.getId())
+                .book(order.getBookId().toDto())
+                .date(order.getDate())
+                .qty(order.getQty())
+                .price(order.getPrice())
+                .user(order.getUserId().toDto())
                 .build();
     }
 

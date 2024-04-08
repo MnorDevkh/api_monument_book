@@ -13,8 +13,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Builder
-@Table(name = "customerOrder_tb")
-public class CustomerOrder {
+@Table(name = "Order_tb")
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -29,4 +29,5 @@ public class CustomerOrder {
     private float price;
     private LocalDate date;
     private boolean deleted;
+    private boolean action;
 }

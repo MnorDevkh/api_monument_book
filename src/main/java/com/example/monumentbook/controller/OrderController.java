@@ -1,10 +1,13 @@
 package com.example.monumentbook.controller;
 
+import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
@@ -21,4 +24,9 @@ public class OrderController {
     public ResponseEntity<?> getCurrentUser(@RequestParam(defaultValue = "1") Integer page,@RequestParam(defaultValue = "10") Integer size){
         return orderService.allCurrentOrder(page, size);
     }
+    @PostMapping("/new-order")
+    public ResponseEntity<?> newOrder(@RequestBody List<OrderRequest> orderRequests){
+        return orderService.newOrder(orderRequests);
+    }
+
 }
