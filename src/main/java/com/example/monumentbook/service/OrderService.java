@@ -12,6 +12,5 @@ public interface OrderService {
 
     ResponseEntity<?> newOrder(OrderRequest orderRequest);
     ResponseEntity<?> confirm(Integer id);
-
     ResponseEntity<?> reject(Integer id);
 }

@@ -4,6 +4,7 @@ import com.example.monumentbook.enums.Action;
 import com.example.monumentbook.model.*;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.OrderItemDto;
+import com.example.monumentbook.model.dto.PaymentDto;
 import com.example.monumentbook.model.dto.UserDto;
 import com.example.monumentbook.model.requests.OrderItemRequest;
 import com.example.monumentbook.model.requests.OrderRequest;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final BookRepository bookRepository;
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
+    private final PaymentRepository paymentRepository;
 
 
     @Override
@@ -82,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResponseEntity<?> newOrder(OrderRequest orderRequest) {
+        ResponseObject res = new ResponseObject();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser;
         if (authentication.getPrincipal() instanceof User) {
@@ -90,27 +93,51 @@ public class OrderServiceImpl implements OrderService {
             // Handle the case when the principal is not an instance of User
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
         }
-        Order orderObj = Order.builder()
-                .action(Action.Pedding)
-                .type(orderRequest.isType())
-                .qty(orderRequest.getQty())
-                .price(orderRequest.getPrice())
-                .userId(currentUser)
-                .date(LocalDate.now())
-                .build();
-        orderRepository.save(orderObj);
-        Order order = Order.builder()
-                .id(orderObj.getId())
-                .build();
-        List<OrderItemDto> orderItemResponses = new ArrayList<>(); // List to store individual responses
+        Optional<Payment> paymentOptional = paymentRepository.findById(orderRequest.getPaymentId());
+        if (paymentOptional.isPresent()){
+            Order orderObj = Order.builder()
+                    .action(Action.Pedding)
+                    .type(orderRequest.isType())
+                    .qty(orderRequest.getQty())
+                    .price(orderRequest.getPrice())
+                    .userId(currentUser)
+                    .payment(paymentOptional.get())
+                    .date(LocalDate.now())
+                    .address(orderRequest.getAddress())
+                    .build();
+            orderRepository.save(orderObj);
+            Order order = Order.builder()
+                    .id(orderObj.getId())
+                    .build();
+            List<OrderItemDto> orderItemResponses = new ArrayList<>(); // List to store individual responses
 
-        for (OrderItemRequest orderItemRequest : orderRequest.getOrderItem()) {
-            ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest, order);
-            OrderItemDto orderItemResponse = (OrderItemDto) response.getBody();
-            orderItemResponses.add(orderItemResponse);
+            for (OrderItemRequest orderItemRequest : orderRequest.getOrderItem()) {
+                ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest, order);
+                OrderItemDto orderItemResponse = (OrderItemDto) response.getBody();
+                orderItemResponses.add(orderItemResponse);
+            }
+            Optional<User> user = userRepository.findById((int) orderObj.getUserId().getId());
+            UserDto userDto = user.map(this::buildUserDto).orElse(null);
+            Optional<Payment> payment = paymentRepository.findById(orderObj.getPayment().getId());
+            PaymentDto paymentDto = payment.map(this::buildPaymentDto).orElse(null);
+            OrderResponse orderResponse = OrderResponse.builder()
+                    .id(order.getId())
+                    .type(orderObj.isType())
+                    .action(orderObj.getAction())
+                    .date(orderObj.getDate())
+                    .paymentDto(paymentDto)
+                    .orderItem(orderItemResponses)
+                    .address(orderObj.getAddress())
+                    .user(userDto)
+                    .build();
+            res.setStatus(true);
+            res.setMessage("add successful!");
+            res.setData(orderResponse);
+
         }
 
-        return ResponseEntity.ok("orderResponse"); // Return the list of responses
+
+        return ResponseEntity.ok(res); // Return the list of responses
     }
 
     @Override
@@ -263,6 +290,15 @@ public class OrderServiceImpl implements OrderService {
                 .email(user.getEmail())
                 .build();
     }
+    private PaymentDto buildPaymentDto(Payment payment) {
+        return PaymentDto.builder()
+                .id(payment.getId())
+                .name(payment.getName())
+                .cvv(payment.getCvv())
+                .number(payment.getNumber())
+                .build();
+    }
+
     private OrderItemDto orderItemResponseDroFlags(OrderItem orderItem){
         return OrderItemDto.builder()
                 .id(orderItem.getId())
@@ -279,14 +315,14 @@ public class OrderServiceImpl implements OrderService {
             for (Order order : pageResult) {
                 Optional<User> user = userRepository.findById((int) order.getUserId().getId());
                 UserDto userDto = user.map(this::buildUserDto).orElse(null);
-
+                Optional<Payment> payment = paymentRepository.findById(order.getPayment().getId());
+                PaymentDto paymentDto = payment.map(this::buildPaymentDto).orElse(null);
                 List<OrderItemDto> orderItemResponses = new ArrayList<>();
                 List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
                 System.out.println("orderItems" + orderItems);
                 for (OrderItem orderItem : orderItems) {
                     Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
                     BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-
                     OrderItemDto orderItemDto = OrderItemDto.builder()
                             .id(orderItem.getId())
                             .book(bookDto)
@@ -301,7 +337,9 @@ public class OrderServiceImpl implements OrderService {
                         .type(order.isType())
                         .action(order.getAction())
                         .date(order.getDate())
+                        .paymentDto(paymentDto)
                         .orderItem(orderItemResponses)
+                        .address(order.getAddress())
                         .user(userDto)
                         .build();
                 orderResponseList.add(orderResponse);

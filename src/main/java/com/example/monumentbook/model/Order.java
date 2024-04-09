@@ -28,5 +28,8 @@ public class Order {
     private LocalDate date;
     private boolean deleted;
     private boolean type;
+    @OneToOne(fetch = FetchType.LAZY )
+    private Payment payment;
+    private String address;
     private Action  action;
 }
