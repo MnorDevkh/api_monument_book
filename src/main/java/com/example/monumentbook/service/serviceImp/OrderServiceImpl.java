@@ -1,10 +1,7 @@
 package com.example.monumentbook.service.serviceImp;
 
 import com.example.monumentbook.enums.Action;
-import com.example.monumentbook.model.Book;
-import com.example.monumentbook.model.Order;
-import com.example.monumentbook.model.OrderItem;
-import com.example.monumentbook.model.User;
+import com.example.monumentbook.model.*;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.OrderItemDto;
 import com.example.monumentbook.model.dto.UserDto;
@@ -13,10 +10,7 @@ import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.model.responses.ApiResponse;
 import com.example.monumentbook.model.responses.OrderItemResponse;
 import com.example.monumentbook.model.responses.OrderResponse;
-import com.example.monumentbook.repository.BookRepository;
-import com.example.monumentbook.repository.OrderItemRepository;
-import com.example.monumentbook.repository.OrderRepository;
-import com.example.monumentbook.repository.UserRepository;
+import com.example.monumentbook.repository.*;
 import com.example.monumentbook.service.OrderService;
 import com.example.monumentbook.utilities.response.ResponseObject;
 import lombok.RequiredArgsConstructor;
@@ -43,39 +37,24 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final OrderRepository orderRepository;
+    private final CartRepository cartRepository;
+
 
     @Override
-    public ResponseEntity<?> allCustomerOrder(Integer page, Integer size) {
+    public ResponseEntity<?> allOrder(Integer page, Integer size) {
 //        ResponseObject res = new ResponseObject(); // Move inside the try block
         try {
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
-            Page<OrderItem> pageResult = orderItemRepository.findAll(pageable);
-            List<OrderItemResponse> orderList = new ArrayList<>();
-            for(OrderItem orderItem : pageResult){
-//                Optional<User> user = userRepository.findById((int) orderItem.getUserId().getId());
-//                UserDto userDto = user.map(this::buildUserDto).orElse(null);
-                Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
-                BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-                Optional<OrderItem> customerOrderOptional = orderItemRepository.findById(orderItem.getId());
-                if (customerOrderOptional.isPresent()){
-                    OrderItemResponse orderItemResponse = OrderItemResponse.builder()
-                            .id(customerOrderOptional.get().getId())
-                            .book(bookDto)
-
-                            .price(customerOrderOptional.get().getPrice())
-                            .qty(customerOrderOptional.get().getQty())
-                            .date(customerOrderOptional.get().getDate())
-                            .build();
-                    orderList.add(orderItemResponse);
-                }
-                ApiResponse res = new ApiResponse(true, "Fetch books successful!", orderList, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.ok(res);
-            }
-
-            return ResponseEntity.ok(orderList);
-        }catch (Exception e){
-            ApiResponse res = new ApiResponse(true, "Fetch books successful!", null, 0, 0, 0,0);
+            Page<Order> pageResult = orderRepository.findAll(pageable);
+            List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
             return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            ResponseObject res = new ResponseObject(); // Create a new object for error handling
+            res.setMessage("fetch data failed");
+            res.setStatus(false);
+            res.setData(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
     }
 
@@ -87,37 +66,8 @@ public class OrderServiceImpl implements OrderService {
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
             Page<Order> pageResult = orderRepository.findByUserIdIdAndDeletedFalse(currentUser.getId(), pageable);
 
-
-            System.out.println(pageResult+ "pageResult");
-            List<OrderResponse> orderResponseList = new ArrayList<>();
-
-            for (Order order : pageResult) {
-                Optional<User> user = userRepository.findById((int) order.getUserId().getId());
-                UserDto userDto = user.map(this::buildUserDto).orElse(null);
-
-                List<OrderItemDto> orderItemResponses = new ArrayList<>();
-                List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
-                System.out.println("orderItems" + orderItems);
-                for (OrderItem orderItem : orderItems) {
-                    Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
-                    BookDto bookDto = book.map(this::buildBookDto).orElse(null);
-
-                    OrderItemDto orderItemDto = OrderItemDto.builder()
-                            .id(orderItem.getId())
-                            .book(bookDto)
-                            .price(orderItem.getPrice())
-                            .qty(orderItem.getQty())
-                            .build();
-                    orderItemResponses.add(orderItemDto);
-                }
-
-                OrderResponse orderResponse = orderResponseFlags(order);
-                orderResponse.setOrderItem(orderItemResponses);
-                orderResponse.setUser(userDto);
-                orderResponseList.add(orderResponse);
-            }
-
-            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponseList, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+            List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
             return ResponseEntity.ok(res);
         } catch (Exception e) {
             ResponseObject res = new ResponseObject(); // Create a new object for error handling
@@ -141,7 +91,10 @@ public class OrderServiceImpl implements OrderService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
         }
         Order orderObj = Order.builder()
-                .action(Action.Padding)
+                .action(Action.Pedding)
+                .type(orderRequest.isType())
+                .qty(orderRequest.getQty())
+                .price(orderRequest.getPrice())
                 .userId(currentUser)
                 .date(LocalDate.now())
                 .build();
@@ -150,40 +103,94 @@ public class OrderServiceImpl implements OrderService {
                 .id(orderObj.getId())
                 .build();
         List<OrderItemDto> orderItemResponses = new ArrayList<>(); // List to store individual responses
-//        Optional<User> user = userRepository.findById((int) order.getUserId().getId());
-//        UserDto userDto = user.map(this::buildUserDto).orElse(null);
 
         for (OrderItemRequest orderItemRequest : orderRequest.getOrderItem()) {
             ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest, order);
             OrderItemDto orderItemResponse = (OrderItemDto) response.getBody();
             orderItemResponses.add(orderItemResponse);
         }
-        // Construct OrderResponse using orderResponseFlags method
-        OrderResponse orderResponse = orderResponseFlags(orderObj);
-        orderResponse.setOrderItem(orderItemResponses);
-//        orderResponse.setUser(userDto);
 
-        return ResponseEntity.ok(orderResponse); // Return the list of responses
+        return ResponseEntity.ok("orderResponse"); // Return the list of responses
     }
 
     @Override
-    public ResponseEntity<?> conform(Integer id) {
-        
-        return null;
+    public ResponseEntity<?> confirm(Integer id) {
+        try {
+            Optional<Order> orderOptional = orderRepository.findById(id);
+            if (orderOptional.isPresent()) {
+                Order order = orderOptional.get();
+                order.setAction(Action.Confirm); // Update the action to "Conform"
+                orderRepository.save(order); // Save the updated order back to the database
+
+                // Update book quantities and handle cart deletion
+                updateBookQuantitiesAndDeleteCart(order);
+
+                // Return a success response
+                return ResponseEntity.ok("Order with ID " + id + " confirmed successfully.");
+            } else {
+                // Handle the case when the order with the given ID does not exist
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            // Handle any exceptions that may occur during the process
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to confirm order: " + e.getMessage());
+        }
+    }
+
+    private void updateBookQuantitiesAndDeleteCart(Order order) {
+        // Retrieve order items
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+
+        for (OrderItem orderItem : orderItems) {
+            Optional<Book> bookOptional = bookRepository.findById(orderItem.getBookId().getId());
+            if (bookOptional.isPresent()) {
+                Book book = bookOptional.get();
+                int requestedQty = orderItem.getQty();
+                int availableQty = book.getQty();
+                if (requestedQty <= availableQty) {
+                    // Update book quantity
+                    book.setQty(availableQty - requestedQty);
+                    bookRepository.save(book);
+                    // Delete cart items (if needed)
+                    // Implement cart deletion logic here if necessary
+                } else {
+                    // Handle the case when requested quantity exceeds available quantity
+                    // You may throw an exception or handle it differently based on your requirements
+                }
+            } else {
+                // Handle the case when the book associated with the order item is not found
+                // You may throw an exception or handle it differently based on your requirements
+            }
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> reject(Integer id) {
+        try {
+            Optional<Order> orderOptional = orderRepository.findById(id);
+            if (orderOptional.isPresent()) {
+                Order order = orderOptional.get();
+                order.setAction(Action.Reject); // Update the action to "Reject"
+                orderRepository.save(order); // Save the updated order back to the database
+                // You can return a success response here if needed
+                return ResponseEntity.ok("Order with ID " + id + " reject successfully.");
+            } else {
+                // Handle the case when the order with the given ID does not exist
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            // Handle any exceptions that may occur during the process
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to confirm order: " + e.getMessage());
+        }
     }
 
     private ResponseEntity<?> processCustomerRequest(User currentUser, OrderItemRequest orderItemRequest, Order order) {
         try {
             Integer id = orderItemRequest.getProductId();
             Optional<Book> bookOptional = bookRepository.findById(id);
-//            Optional<Order> orderOptional = orderRepository.findById(orderItemResponses.getId());
             if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
                 Book book = bookOptional.get();
-//                int requestedQty = orderItemRequest.getQty();
-//                int availableQty = book.getQty();
-//                if (requestedQty <= availableQty) {
-//                    book.setQty(availableQty - requestedQty);
-//                    bookRepository.save(book);
                 OrderItem orderItem = OrderItem.builder()
                         .bookId(bookOptional.get())
                         .qty(orderItemRequest.getQty())
@@ -260,20 +267,54 @@ public class OrderServiceImpl implements OrderService {
         return OrderItemDto.builder()
                 .id(orderItem.getId())
                 .book(orderItem.getBookId().toDto())
-//                .date(orderItem.getDate())
                 .qty(orderItem.getQty())
                 .price(orderItem.getPrice())
 
                 .build();
     }
-    private OrderResponse orderResponseFlags(Order order) {
-        return OrderResponse.builder()
-                .id(order.getId())
-                .type(order.isType())
-                .action(order.getAction())
-                .date(order.getDate())
-                .build();
-    }
+
+        private List<OrderResponse> orderResponseFlags(Page<Order> pageResult) {
+            List<OrderResponse> orderResponseList = new ArrayList<>();
+
+            for (Order order : pageResult) {
+                Optional<User> user = userRepository.findById((int) order.getUserId().getId());
+                UserDto userDto = user.map(this::buildUserDto).orElse(null);
+
+                List<OrderItemDto> orderItemResponses = new ArrayList<>();
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+                System.out.println("orderItems" + orderItems);
+                for (OrderItem orderItem : orderItems) {
+                    Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
+                    BookDto bookDto = book.map(this::buildBookDto).orElse(null);
+
+                    OrderItemDto orderItemDto = OrderItemDto.builder()
+                            .id(orderItem.getId())
+                            .book(bookDto)
+                            .price(orderItem.getPrice())
+                            .qty(orderItem.getQty())
+                            .build();
+                    orderItemResponses.add(orderItemDto);
+                }
+
+                OrderResponse orderResponse = OrderResponse.builder()
+                        .id(order.getId())
+                        .type(order.isType())
+                        .action(order.getAction())
+                        .date(order.getDate())
+                        .orderItem(orderItemResponses)
+                        .user(userDto)
+                        .build();
+                orderResponseList.add(orderResponse);
+            }
+
+            return orderResponseList;
+        }
+
+//    private OrderItemDto orderItemDtoFlags(){
+//        return OrderItemDto.builder()
+//                .id()
+//                .build();
+//    }
 
 
 }

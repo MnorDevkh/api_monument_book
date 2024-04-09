@@ -15,8 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderRequest {
     private List<OrderItemRequest> orderItem;
-    private LocalDate date;
-
-    //    private boolean conform;
-    private Action action;
+    private int qty;
+    private float price;
+    private boolean type;
 }

@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface OrderService {
-    ResponseEntity<?> allCustomerOrder(Integer page, Integer size);
+    ResponseEntity<?> allOrder(Integer page, Integer size);
     ResponseEntity<?> allCurrentOrder(Integer page, Integer size);
 
     ResponseEntity<?> newOrder(OrderRequest orderRequest);
-    ResponseEntity<?> conform(Integer id);
+    ResponseEntity<?> confirm(Integer id);
+
+    ResponseEntity<?> reject(Integer id);
 }

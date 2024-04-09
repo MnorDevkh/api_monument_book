@@ -6,6 +6,7 @@ import com.example.monumentbook.model.requests.OrderRequest;
 import com.example.monumentbook.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class OrderController {
     private final OrderService orderService;
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrder(@RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer size){
-        return orderService.allCustomerOrder(page, size);
+        return orderService.allOrder(page, size);
     }
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser(@RequestParam(defaultValue = "1") Integer page,@RequestParam(defaultValue = "10") Integer size){
@@ -29,6 +30,14 @@ public class OrderController {
     @PostMapping("/new-order")
     public ResponseEntity<?> newOrder(@RequestBody  OrderRequest orderRequest){
         return orderService.newOrder(orderRequest);
+    }
+    @PutMapping("/confirm")
+    public ResponseEntity<?> conform(@Param("order id") Integer id){
+        return orderService.confirm(id);
+    }
+    @PutMapping("/reject")
+    public ResponseEntity<?> reject(@Param("order id") Integer id){
+        return orderService.reject(id);
     }
 
 }

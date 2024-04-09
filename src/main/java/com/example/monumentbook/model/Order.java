@@ -28,5 +28,5 @@ public class Order {
     private LocalDate date;
     private boolean deleted;
     private boolean type;
-    private Action action;
+    private Action  action;
 }
