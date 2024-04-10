@@ -27,6 +27,7 @@ public class OrderResponse {
     private boolean deleted;
     private boolean type;
     private Action action;
+    private String phone;
     private PaymentDto paymentDto;
     private String address;
     @JsonInclude(JsonInclude.Include.NON_NULL)

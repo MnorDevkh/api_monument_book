@@ -102,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
                     .price(orderRequest.getPrice())
                     .userId(currentUser)
                     .payment(paymentOptional.get())
+                    .phone(orderRequest.getPhone())
                     .date(LocalDate.now())
                     .address(orderRequest.getAddress())
                     .build();
@@ -126,6 +127,7 @@ public class OrderServiceImpl implements OrderService {
                     .action(orderObj.getAction())
                     .date(orderObj.getDate())
                     .paymentDto(paymentDto)
+                    .phone(orderObj.getPhone())
                     .orderItem(orderItemResponses)
                     .address(orderObj.getAddress())
                     .user(userDto)
@@ -339,6 +341,7 @@ public class OrderServiceImpl implements OrderService {
                         .date(order.getDate())
                         .paymentDto(paymentDto)
                         .orderItem(orderItemResponses)
+                        .phone(order.getPhone())
                         .address(order.getAddress())
                         .user(userDto)
                         .build();

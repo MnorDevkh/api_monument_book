@@ -18,6 +18,7 @@ public class OrderRequest {
     private List<OrderItemRequest> orderItem;
     private int qty;
     private float price;
+    private String phone;
     private Integer paymentId;
     private boolean type;
     private String address;

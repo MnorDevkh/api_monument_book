@@ -27,6 +27,7 @@ public class Order {
     private float price;
     private LocalDate date;
     private boolean deleted;
+    private String phone;
     private boolean type;
     @OneToOne(fetch = FetchType.LAZY )
     private Payment payment;
