@@ -25,6 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .cvv(paymentRequest.getCvv())
                 .number(paymentRequest.getNumber())
                 .name(paymentRequest.getName())
+                .type(paymentRequest.getType())
                 .date(LocalDate.now())
                 .build();
         paymentRepository.save(payment);
@@ -64,6 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .cvv(payment.getCvv())
                 .id(payment.getId())
                 .number(payment.getNumber())
+                .type(payment.getType())
                 .name(payment.getName())
                 .date(payment.getDate())
                 .build();

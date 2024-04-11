@@ -13,4 +13,8 @@ public interface OrderService {
     ResponseEntity<?> newOrder(OrderRequest orderRequest);
     ResponseEntity<?> confirm(Integer id);
     ResponseEntity<?> reject(Integer id);
+    ResponseEntity<?> findPending(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending);
+    ResponseEntity<?> findReject(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending);
+    ResponseEntity<?> findConfirm(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending);
+
 }

@@ -17,6 +17,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
+    private String type;
     private String name;
     private String number;
     private Integer cvv ;

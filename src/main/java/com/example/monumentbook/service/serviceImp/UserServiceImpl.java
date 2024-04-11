@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService {
             User currentUser = (User) authentication.getPrincipal();
 
             Optional<User> userOptional = userRepository.findById((int) currentUser.getId());
-            System.out.println(userOptional+"userOptional");
             if (userOptional.isPresent()) {
                 res.setData(userResponse(userOptional));
                 res.setMessage("fetch data success!");

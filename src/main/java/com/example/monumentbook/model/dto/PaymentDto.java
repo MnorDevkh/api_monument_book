@@ -14,4 +14,5 @@ public class PaymentDto {
     private String name;
     private String number;
     private Integer cvv;
+    private String type;
 }

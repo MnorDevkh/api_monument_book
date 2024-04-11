@@ -73,6 +73,6 @@ public class User implements UserDetails {
         return true;
     }
     public UserDto toDto(){
-       return new UserDto(this.id,this.name,this.phoneNumber,this.email, this.coverImg);
+       return new UserDto(this.id,this.name,this.phoneNumber,this.email, this.coverImg, this.address);
     }
 }

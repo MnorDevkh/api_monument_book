@@ -15,6 +15,7 @@ public class PaymentResponse {
     private Integer id;
     private String name;
     private String number;
+    private String type;
     private Integer cvv;
     private LocalDate date;
 }

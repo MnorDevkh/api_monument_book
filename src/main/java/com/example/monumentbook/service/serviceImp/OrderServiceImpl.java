@@ -96,7 +96,7 @@ public class OrderServiceImpl implements OrderService {
         Optional<Payment> paymentOptional = paymentRepository.findById(orderRequest.getPaymentId());
         if (paymentOptional.isPresent()){
             Order orderObj = Order.builder()
-                    .action(Action.Pedding)
+                    .action(Action.pending)
                     .type(orderRequest.isType())
                     .qty(orderRequest.getQty())
                     .price(orderRequest.getPrice())
@@ -126,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
                     .type(orderObj.isType())
                     .action(orderObj.getAction())
                     .date(orderObj.getDate())
-                    .paymentDto(paymentDto)
+                    .payment(paymentDto)
                     .phone(orderObj.getPhone())
                     .orderItem(orderItemResponses)
                     .address(orderObj.getAddress())
@@ -148,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
             Optional<Order> orderOptional = orderRepository.findById(id);
             if (orderOptional.isPresent()) {
                 Order order = orderOptional.get();
-                order.setAction(Action.Confirm); // Update the action to "Conform"
+                order.setAction(Action.confirm); // Update the action to "Conform"
                 orderRepository.save(order); // Save the updated order back to the database
 
                 // Update book quantities and handle cart deletion
@@ -200,7 +200,7 @@ public class OrderServiceImpl implements OrderService {
             Optional<Order> orderOptional = orderRepository.findById(id);
             if (orderOptional.isPresent()) {
                 Order order = orderOptional.get();
-                order.setAction(Action.Reject); // Update the action to "Reject"
+                order.setAction(Action.reject); // Update the action to "Reject"
                 orderRepository.save(order); // Save the updated order back to the database
                 // You can return a success response here if needed
                 return ResponseEntity.ok("Order with ID " + id + " reject successfully.");
@@ -210,7 +210,92 @@ public class OrderServiceImpl implements OrderService {
             }
         } catch (Exception e) {
             // Handle any exceptions that may occur during the process
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to confirm order: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> findPending(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
+        try {
+            Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            PageRequest pageable = PageRequest.of(pageNumber -1, pageSize, sortDirection, sortBy);
+            Page<Order> pageResult = orderRepository.findAllByAction(Action.pending,pageable);
+            if (pageResult.isEmpty()) {
+                ResponseObject res = new ResponseObject(); // Create a new object for error handling
+                res.setMessage("fetch data not found");
+                res.setStatus(false);
+                res.setData(null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+            }
+            List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            System.err.println(e);
+            ResponseObject res = new ResponseObject(); // Create a new object for error handling
+            res.setMessage("fetch data failed");
+            res.setStatus(false);
+            res.setData(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> findReject(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
+        try {
+            Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            PageRequest pageable = PageRequest.of(pageNumber - 1, pageSize, sortDirection, sortBy);
+            Page<Order> pageResult = orderRepository.findAllByAction(Action.reject, pageable);
+
+            if (pageResult.isEmpty()) {
+                ResponseObject res = new ResponseObject(); // Create a new object for error handling
+                res.setMessage("fetch data not found");
+                res.setStatus(false);
+                res.setData(null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+            }
+
+            List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            System.err.println(e);
+            ResponseObject res = new ResponseObject(); // Create a new object for error handling
+            res.setMessage("fetch data failed");
+            res.setStatus(false);
+            res.setData(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> findConfirm(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
+        try {
+            Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            PageRequest pageable = PageRequest.of(pageNumber -1, pageSize, sortDirection, sortBy);
+
+            Page<Order> pageResult = orderRepository.findAllByAction(Action.confirm,pageable);
+
+            if (pageResult.isEmpty()) {
+                ResponseObject res = new ResponseObject(); // Create a new object for error handling
+                res.setMessage("fetch data not found");
+                res.setStatus(false);
+                res.setData(null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+            }
+            List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
+            ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            System.err.println(e);
+            ResponseObject res = new ResponseObject(); // Create a new object for error handling
+            res.setMessage("fetch data failed");
+            res.setStatus(false);
+            res.setData(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e);
         }
     }
 
@@ -230,38 +315,6 @@ public class OrderServiceImpl implements OrderService {
                 orderItemRepository.save(orderItem);
                 OrderItemDto orderItemResponse = orderItemResponseDroFlags(orderItem);
                 return ResponseEntity.ok(orderItemResponse);
-//                    try {
-//                        ResponseObject res = new ResponseObject();
-//                        Optional<Cart> cartOptional = cartRepository.findById(id);
-//                        if (cartOptional.isPresent()) {
-//                            Cart cart = cartOptional.get();
-//                            cartRepository.delete(cart);
-//                            res.setMessage("Deleted cart with id " + id);
-//                            res.setStatus(true);
-//                            res.setData(null);
-//                            return ResponseEntity.ok(res);
-//                        } else {
-//                            res.setMessage("Cart with id " + id + " not found");
-//                            res.setStatus(false);
-//                            res.setData(null);
-//                            return ResponseEntity.notFound().build();
-//                        }
-//                    } catch (Exception e) {
-//                        ResponseObject res = new ResponseObject();
-//                        res.setMessage("Failed to delete cart with id " + id);
-//                        res.setStatus(false);
-//                        res.setData(e);
-//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-//                    }
-
-//                } else {
-//                    ResponseObject res = new ResponseObject();
-//                    res.setMessage("Requested quantity exceeds available quantity");
-//                    res.setStatus(false);
-//                    res.setData(null);
-//
-//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
-//                }
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found or deleted");
             }
@@ -286,16 +339,18 @@ public class OrderServiceImpl implements OrderService {
     private UserDto buildUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
-                .name(user.getUsername())
+                .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
                 .coverImage(user.getCoverImg())
                 .email(user.getEmail())
+                .address(user.getAddress())
                 .build();
     }
     private PaymentDto buildPaymentDto(Payment payment) {
         return PaymentDto.builder()
                 .id(payment.getId())
                 .name(payment.getName())
+                .type(payment.getType())
                 .cvv(payment.getCvv())
                 .number(payment.getNumber())
                 .build();
@@ -339,7 +394,7 @@ public class OrderServiceImpl implements OrderService {
                         .type(order.isType())
                         .action(order.getAction())
                         .date(order.getDate())
-                        .paymentDto(paymentDto)
+                        .payment(paymentDto)
                         .orderItem(orderItemResponses)
                         .phone(order.getPhone())
                         .address(order.getAddress())

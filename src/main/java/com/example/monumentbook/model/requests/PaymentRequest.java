@@ -11,5 +11,5 @@ public class PaymentRequest {
     private String name;
     private String number;
     private Integer cvv ;
-
+    private String type;
 }

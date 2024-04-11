@@ -28,7 +28,7 @@ public class OrderResponse {
     private boolean type;
     private Action action;
     private String phone;
-    private PaymentDto paymentDto;
+    private PaymentDto payment;
     private String address;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserDto user;
