@@ -21,7 +21,7 @@ public class CreditCard {
     private Integer id;
     private String fullName;
     @Column(unique = true)
-    private long cardNumber;
+    private String cardNumber;
     private int cvv;
     @Column(name = "expiry_month")
     private int expiryMonth;

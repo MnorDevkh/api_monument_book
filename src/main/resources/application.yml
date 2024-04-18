@@ -5,15 +5,15 @@ spring:
 #    password: 1213@A*#
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #
-    url: jdbc:mysql://localhost:3306/monument_book
-    username: root
-    password: 1234!@#$
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
 #    url: jdbc:mysql://localhost:3306/monument_book
 #    username: root
-#    password: 1213@A*#
+#    password: 1234!@#$
 #    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    url: jdbc:mysql://localhost:3306/monument_book
+    username: root
+    password: 1213@A*#
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     show-sql: true

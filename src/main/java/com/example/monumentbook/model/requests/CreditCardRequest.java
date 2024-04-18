@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreditCardRequest {
     private String fullName;
-    private long cardNumber;
+    private String cardNumber;
     private int cvv;
     private int expiryMonth;
     private int expiryYear;

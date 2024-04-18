@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class CreditCardResponse {
     private Integer id;
     private String fullName;
-    private long cardNumber;
+    private String cardNumber;
     private int cvv;
     private int expiryMonth;
     private int expiryYear;
