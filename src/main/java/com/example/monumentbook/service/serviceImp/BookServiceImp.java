@@ -756,6 +756,7 @@ public class BookServiceImp implements BookService {
                         purchase.setQty(purchaseRequest.getQty());
                         purchase.setDate(LocalDate.now());
                         purchase.setSupplier(supplierOptional.get());
+                        purchase.setBook(bookOptional.get());
                         Book book = bookOptional.get();
                         book.setQty(book.getQty() + purchaseRequest.getQty() - purchase.getQty());
                         bookRepository.save(book);
