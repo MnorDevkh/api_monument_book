@@ -220,13 +220,7 @@ public class OrderServiceImpl implements OrderService {
             Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
             PageRequest pageable = PageRequest.of(pageNumber -1, pageSize, sortDirection, sortBy);
             Page<Order> pageResult = orderRepository.findAllByAction(Action.pending,pageable);
-            if (pageResult.isEmpty()) {
-                ResponseObject res = new ResponseObject(); // Create a new object for error handling
-                res.setMessage("fetch data not found");
-                res.setStatus(false);
-                res.setData(null);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+
             List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
             ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
 
@@ -248,13 +242,7 @@ public class OrderServiceImpl implements OrderService {
             PageRequest pageable = PageRequest.of(pageNumber - 1, pageSize, sortDirection, sortBy);
             Page<Order> pageResult = orderRepository.findAllByAction(Action.reject, pageable);
 
-            if (pageResult.isEmpty()) {
-                ResponseObject res = new ResponseObject(); // Create a new object for error handling
-                res.setMessage("fetch data not found");
-                res.setStatus(false);
-                res.setData(null);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+
 
             List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
             ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
@@ -278,13 +266,6 @@ public class OrderServiceImpl implements OrderService {
 
             Page<Order> pageResult = orderRepository.findAllByAction(Action.confirm,pageable);
 
-            if (pageResult.isEmpty()) {
-                ResponseObject res = new ResponseObject(); // Create a new object for error handling
-                res.setMessage("fetch data not found");
-                res.setStatus(false);
-                res.setData(null);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
             List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
             ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
 

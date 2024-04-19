@@ -101,8 +101,6 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-
-
                 ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
                 return ResponseEntity.ok(res);
 
@@ -115,6 +113,7 @@ public class BookServiceImp implements BookService {
 
     @Override
     public ResponseEntity<?> findBookById(Integer id) {
+        ResponseObject res = new ResponseObject();
         try {
             List<BookResponse> bookObj = new ArrayList<>();
             Optional<Book> bookOptional = bookRepository.findById(id);
@@ -163,18 +162,12 @@ public class BookServiceImp implements BookService {
                         .categories(categoryObj)
                         .build();
                 bookObj.add(bookResponse);
-                ResponseObject res = new ResponseObject();
+
                 res.setStatus(true);
                 res.setMessage("fetch book successful!");
                 res.setData(bookObj);
-                return ResponseEntity.ok(res);
-            } else {
-                ResponseObject res = new ResponseObject();
-                res.setStatus(false);
-                res.setMessage("Book not found!");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
             }
-
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -558,13 +551,9 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-            if (!bookObj.isEmpty()) {
                 ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
                 return ResponseEntity.ok(res);
-            } else {
-                ApiResponse res = new ApiResponse(false, "No books found!", null, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -585,13 +574,10 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-            if (!bookObj.isEmpty()) {
+
                 ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
                 return ResponseEntity.ok(res);
-            } else {
-                ApiResponse res = new ApiResponse(false, "No books found!", null, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -614,13 +600,8 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-            if (!bookObj.isEmpty()) {
-                ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
-                return ResponseEntity.ok(res);
-            } else {
-                ApiResponse res = new ApiResponse(false, "No books found!", null, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+            ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
+            return ResponseEntity.ok(res);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -639,14 +620,9 @@ public class BookServiceImp implements BookService {
                 }
             }
 
-            if (!updatedBooks.isEmpty()) {
                 bookRepository.saveAll(updatedBooks);
                 ApiResponse res = new ApiResponse(true, "Update books success!", updatedBooks, 0, 0, 0, 0);
                 return ResponseEntity.ok(res);
-            } else {
-                ApiResponse res = new ApiResponse(false, "No valid books found to update.", null, 0, 0, 0, 0);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
