@@ -24,8 +24,8 @@ public class BookController {
         this.bookService = bookService;
     }
     @GetMapping("/all")
-    public ResponseEntity<?> getBook(@RequestParam(defaultValue = "1") Integer page,@RequestParam(defaultValue = "10") Integer size){
-        return bookService.findAllBook(page,size);
+    public ResponseEntity<?> getBook(@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize,@Param("order id") String sortBy,@Param("order id") boolean ascending){
+        return bookService.findAllBook(pageNumber, pageSize, sortBy, ascending);
     }
     @GetMapping("/getById")
     public ResponseEntity<?> getBookById(@Param("book id") Integer id){

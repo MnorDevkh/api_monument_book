@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface BookService {
-    ResponseEntity<?> findAllBook(Integer page, Integer size);
+    ResponseEntity<?> findAllBook(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending);
     ResponseEntity<?> findBookById(Integer id);
     ResponseEntity<?> saveBook(BookRequest book);
     ResponseEntity<?> updateBook(BookRequest book, Integer id);

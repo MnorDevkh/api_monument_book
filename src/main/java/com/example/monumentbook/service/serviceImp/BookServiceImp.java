@@ -49,9 +49,10 @@ public class BookServiceImp implements BookService {
 
 
     @Override
-    public ResponseEntity<?> findAllBook(Integer page, Integer size) {
+    public ResponseEntity<?> findAllBook(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
         try {
-            Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
+            Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            PageRequest pageable = PageRequest.of(pageNumber - 1, pageSize, sortDirection, sortBy);
             Page<BookDto> pageResult = bookRepository.findByDeletedFalse(pageable).map(Book::toDto);
             List<BookResponse> bookObj = new ArrayList<>();
             for (BookDto bookDto : pageResult.getContent()) {
@@ -101,13 +102,10 @@ public class BookServiceImp implements BookService {
                 }
             }
 
-            if (!bookObj.isEmpty()) {
+
                 ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
                 return ResponseEntity.ok(res);
-            } else {
-                ApiResponse res = new ApiResponse(false, "No books found!", null, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
