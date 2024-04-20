@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface OrderService {
     ResponseEntity<?> allOrder(Integer page, Integer size);
+    ResponseEntity<?> findById(Integer id);
+
     ResponseEntity<?> allCurrentOrder(Integer page, Integer size);
 
     ResponseEntity<?> newOrder(OrderRequest orderRequest);

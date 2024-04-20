@@ -41,18 +41,23 @@ public class OrderController {
     }
     @GetMapping("/allPending")
     public ResponseEntity<?> allPending(@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize,@Param("order id") String sortBy,@Param("order id") boolean ascending){
-        System.out.println(1);
+
         return orderService.findPending(pageNumber, pageSize, sortBy, ascending);
     }
     @GetMapping("/allConfirm")
     public ResponseEntity<?> allConfirm(@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize,@Param("order id") String sortBy,@Param("order id") boolean ascending){
-        System.out.println(1);
+
         return orderService.findConfirm(pageNumber, pageSize, sortBy, ascending);
     }
     @GetMapping("/allReject")
     public ResponseEntity<?> allReject(@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize,@Param("order id") String sortBy,@Param("order id") boolean ascending){
-        System.out.println(1);
+
         return orderService.findReject(pageNumber, pageSize, sortBy, ascending);
     }
+    @GetMapping("/getById")
+    public ResponseEntity<?> getById(@Param("id") Integer id){
+        return orderService.findById(id);
+    }
+
 
 }

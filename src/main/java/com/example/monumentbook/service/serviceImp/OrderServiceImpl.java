@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -58,6 +59,57 @@ public class OrderServiceImpl implements OrderService {
             res.setData(null);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
+    }
+
+    @Override
+    public ResponseEntity<?> findById(Integer id) {
+       try {
+           Optional<Order> orderOptional = orderRepository.findById(id);
+           ResponseObject res = new  ResponseObject();
+           if (orderOptional.isPresent()) {
+               Optional<User> user = userRepository.findById((int) orderOptional.get().getUserId().getId());
+               UserDto userDto = user.map(this::buildUserDto).orElse(null);
+               Optional<Payment> payment = paymentRepository.findById(orderOptional.get().getPayment().getId());
+               PaymentDto paymentDto = payment.map(this::buildPaymentDto).orElse(null);
+               List<OrderItemDto> orderItemResponses = new ArrayList<>();
+               List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderOptional.get().getId());
+               System.out.println("orderItems" + orderItems);
+               for (OrderItem orderItem : orderItems) {
+                   Optional<Book> book = bookRepository.findById(orderItem.getBookId().getId());
+                   BookDto bookDto = book.map(this::buildBookDto).orElse(null);
+                   OrderItemDto orderItemDto = OrderItemDto.builder()
+                           .id(orderItem.getId())
+                           .book(bookDto)
+                           .price(orderItem.getPrice())
+                           .qty(orderItem.getQty())
+                           .build();
+                   orderItemResponses.add(orderItemDto);
+               }
+
+               OrderResponse orderResponse = OrderResponse.builder()
+                       .id(orderOptional.get().getId())
+                       .type(orderOptional.get().isType())
+                       .action(orderOptional.get().getAction())
+                       .date(orderOptional.get().getDate())
+                       .payment(paymentDto)
+                       .orderItem(orderItemResponses)
+                       .phone(orderOptional.get().getPhone())
+                       .address(orderOptional.get().getAddress())
+                       .user(userDto)
+                       .build();
+               res.setStatus(true);
+               res.setMessage("responses success");
+               res.setData(orderResponse);
+           }
+           return ResponseEntity.ok(res);
+       }catch (Exception e) {
+           ResponseObject res = new ResponseObject(); // Create a new object for error handling
+           res.setMessage("fetch data failed");
+           res.setStatus(false);
+           res.setData(null);
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+
+       }
     }
 
     @Override
