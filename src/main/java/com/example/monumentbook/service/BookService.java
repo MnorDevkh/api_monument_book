@@ -29,4 +29,5 @@ public interface BookService {
     ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
     ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest);
     ResponseEntity<?> getPurchaseById(Integer id);
+    ResponseEntity<?> search(String filter, Integer pageNumber, Integer pageSize);
 }

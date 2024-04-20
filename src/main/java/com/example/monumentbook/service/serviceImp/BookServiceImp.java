@@ -10,16 +10,14 @@ import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.model.responses.ApiResponse;
 import com.example.monumentbook.model.responses.BookResponse;
+import com.example.monumentbook.model.responses.BookSearchResult;
 import com.example.monumentbook.model.responses.PurchaseResponse;
 import com.example.monumentbook.repository.*;
 import com.example.monumentbook.service.BookService;
 import com.example.monumentbook.utilities.response.ResponseObject;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -27,10 +25,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.sql.ClientInfoStatus;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -44,10 +44,7 @@ public class BookServiceImp implements BookService {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
-
-
-
-
+    
     @Override
     public ResponseEntity<?> findAllBook(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
         try {
@@ -105,6 +102,71 @@ public class BookServiceImp implements BookService {
                 return ResponseEntity.ok(res);
 
 
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+    @Override
+    public ResponseEntity<?> search(String filter, Integer pageNumber, Integer pageSize) {
+        try {
+            Pageable pageable = PageRequest.of(pageNumber - 1, pageSize, Sort.by("id").descending());
+            Page<BookDto> pageResult = bookRepository.findByDeletedFalseAndTitleOrIsbn(filter, pageable)
+                    .map(book -> ((Book) book).toDto());
+
+            List<BookResponse> bookObj = new ArrayList<>();
+            for (BookDto bookDto : pageResult.getContent()) {
+                Optional<Book> bookOptional = bookRepository.findById(bookDto.getId());
+                if (bookOptional.isPresent()) {
+                    // Fetch associated categories
+                    List<CategoryDto> categoryObj = new ArrayList<>();
+                    List<BookCategory> categoryByBook = bookCategoryRepository.findBookCategoryByBook(bookOptional.get());
+                    for (BookCategory bookCategory : categoryByBook) {
+                        Optional<Category> categoryOptional = categoryRepository.findById(bookCategory.getCategory().getId());
+                        if (categoryOptional.isPresent()) {
+                            CategoryDto categoryDto = CategoryDto.builder()
+                                    .id(categoryOptional.get().getId())
+                                    .name(categoryOptional.get().getName())
+                                    .description(categoryOptional.get().getDescription())
+                                    .build();
+                            categoryObj.add(categoryDto);
+                        }
+                    }
+                    // Fetch associated authors
+                    List<AuthorDto> authorObj = new ArrayList<>();
+                    List<AuthorBook> categoryByAuthor = authorBookRepository.findAllByBook(bookOptional.get());
+                    for (AuthorBook authorBook : categoryByAuthor) {
+                        Optional<Author> authorOptional = authorRepository.findById(authorBook.getAuthors().getId());
+                        if (authorOptional.isPresent()) {
+                            AuthorDto authorDto = AuthorDto.builder()
+                                    .id(authorOptional.get().getId())
+                                    .name(authorOptional.get().getName())
+                                    .description(authorOptional.get().getDescription())
+                                    .image(authorOptional.get().getImage())
+                                    .build();
+                            authorObj.add(authorDto);
+                        }
+                    }
+                    // Construct BookResponse
+                    BookResponse bookResponse = BookResponse.builder()
+                            .id(bookOptional.get().getId())
+                            .title(bookOptional.get().getTitle())
+                            .description(bookOptional.get().getDescription())
+                            .isbn(bookOptional.get().getIsbn())
+                            .coverImg(bookOptional.get().getCoverImg())
+                            .publisher(bookOptional.get().getPublisher())
+                            .publishDate(bookOptional.get().getPublishDate())
+                            .price(bookOptional.get().getPrice())
+                            .qty(bookOptional.get().getQty())
+                            .author(authorObj)
+                            .categories(categoryObj)
+                            .build();
+                    bookObj.add(bookResponse);
+                }
+            }
+
+            ApiResponse res = new ApiResponse(true,"Fetch books successful!", bookObj,pageResult.getNumber() + 1,pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements()
+            );
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -779,6 +841,10 @@ public class BookServiceImp implements BookService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
         }
     }
+
+
+
+
 
 
     @Override

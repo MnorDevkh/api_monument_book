@@ -124,5 +124,9 @@ public class BookController {
     public ResponseEntity<?> getImportById(@Param("import vendor id") Integer id){
         return bookService.getPurchaseById(id);
     }
+    @GetMapping("/search")
+    public ResponseEntity<?> getCurrentUser(@Param("filter") String filter,@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize){
+        return bookService.search( filter, pageNumber,  pageSize);
+    }
 
 }
