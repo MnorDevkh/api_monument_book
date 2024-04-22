@@ -42,7 +42,6 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final PaymentRepository paymentRepository;
 
-
     @Override
     public ResponseEntity<?> allOrder(Integer page, Integer size) {
 //        ResponseObject res = new ResponseObject(); // Move inside the try block
@@ -200,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
             Optional<Order> orderOptional = orderRepository.findById(id);
             if (orderOptional.isPresent()) {
                 Order order = orderOptional.get();
-                order.setAction(Action.confirm); // Update the action to "Conform"
+                order.setAction(Action.confirmed); // Update the action to "Conform"
                 orderRepository.save(order); // Save the updated order back to the database
 
                 // Update book quantities and handle cart deletion
@@ -252,7 +251,7 @@ public class OrderServiceImpl implements OrderService {
             Optional<Order> orderOptional = orderRepository.findById(id);
             if (orderOptional.isPresent()) {
                 Order order = orderOptional.get();
-                order.setAction(Action.reject); // Update the action to "Reject"
+                order.setAction(Action.rejected); // Update the action to "Reject"
                 orderRepository.save(order); // Save the updated order back to the database
                 // You can return a success response here if needed
                 return ResponseEntity.ok("Order with ID " + id + " reject successfully.");
@@ -292,7 +291,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
             PageRequest pageable = PageRequest.of(pageNumber - 1, pageSize, sortDirection, sortBy);
-            Page<Order> pageResult = orderRepository.findAllByAction(Action.reject, pageable);
+            Page<Order> pageResult = orderRepository.findAllByAction(Action.rejected, pageable);
 
 
 
@@ -316,7 +315,7 @@ public class OrderServiceImpl implements OrderService {
             Sort.Direction sortDirection = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
             PageRequest pageable = PageRequest.of(pageNumber -1, pageSize, sortDirection, sortBy);
 
-            Page<Order> pageResult = orderRepository.findAllByAction(Action.confirm,pageable);
+            Page<Order> pageResult = orderRepository.findAllByAction(Action.confirmed,pageable);
 
             List<OrderResponse> orderResponse = orderResponseFlags(pageResult);
             ApiResponse res = new ApiResponse(true, "Fetch orders successful!", orderResponse, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
@@ -395,7 +394,6 @@ public class OrderServiceImpl implements OrderService {
                 .book(orderItem.getBookId().toDto())
                 .qty(orderItem.getQty())
                 .price(orderItem.getPrice())
-
                 .build();
     }
 

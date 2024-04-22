@@ -48,11 +48,7 @@ public class BookController {
         return  bookService.DeleteById(id);
     }
 
-    @PostMapping("/addPurchase")
-    @Operation(summary = "add product by Id")
-    public ResponseEntity<?> addProductByName(@RequestBody PurchaseRequest purchaseRequest){
-      return bookService.purchaseById(purchaseRequest);
-    }
+
     @PostMapping("/PurchaseCheckout")
     @Operation(summary = "sell book")
     private ResponseEntity<?> processCheckout(@RequestBody List<OrderItemRequest> orderItemRequest){
@@ -104,26 +100,7 @@ public class BookController {
     public ResponseEntity<?> deleteNewArrival(@RequestBody RequestById bookIds){
         return bookService.deleteNewArrival(bookIds);
     }
-    @GetMapping("/getAllPurchase")
-    @Operation(summary = "get all vendor")
-    public ResponseEntity<?> getAllImport(){
-        return bookService.getAllPurchase();
-    }
-    @DeleteMapping("/deletePurchase")
-    @Operation(summary = "delete import by vendor id")
-    public ResponseEntity<?> deleteImport(@Param(value = "vendor id")Integer id){
-        return bookService.deletePurchase(id);
-    }
-    @PutMapping("/updatePurchase")
-    @Operation(summary = "update import by vendor id")
-    public ResponseEntity<?> UpdateImport(@Param(value = "vendor id")Integer id, @RequestBody PurchaseRequest purchaseRequest){
-        return bookService.updatePurchase(id, purchaseRequest);
-    }
-    @GetMapping("/getPurchaseById")
-    @Operation(summary = "get import vendor by id")
-    public ResponseEntity<?> getImportById(@Param("import vendor id") Integer id){
-        return bookService.getPurchaseById(id);
-    }
+
     @GetMapping("/search")
     public ResponseEntity<?> getCurrentUser(@Param("filter") String filter,@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize){
         return bookService.search( filter, pageNumber,  pageSize);

@@ -7,7 +7,7 @@ import com.example.monumentbook.model.requests.SupplierRequest;
 import com.example.monumentbook.model.responses.SupplierResponse;
 import com.example.monumentbook.repository.BookRepository;
 import com.example.monumentbook.repository.BookSupplierRepository;
-import com.example.monumentbook.repository.ProductRepository;
+import com.example.monumentbook.repository.PurchaseRepository;
 import com.example.monumentbook.repository.SupplierRepository;
 import com.example.monumentbook.service.SupplierService;
 import com.example.monumentbook.utilities.response.ResponseObject;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class SupplierServiceImpl implements SupplierService {
     private final SupplierRepository supplierRepository;
     private final BookRepository bookRepository;
-    private final ProductRepository productRepository;
+    private final PurchaseRepository purchaseRepository;
     private final BookSupplierRepository bookSupplierRepository;
 
     @Override
@@ -175,11 +175,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
     private List<PurchaseDto> productFlags(Supplier supplier){
         System.out.println(supplier+"supplier");
-        List<Purchase> purchaseList = productRepository.findAllBySupplier(supplier);
+        List<Purchase> purchaseList = purchaseRepository.findAllBySupplier(supplier);
         List<PurchaseDto> purchaseDtoList = new ArrayList<>();
 
         for(Purchase purchase : purchaseList){
-            Optional<Purchase> productOptional = productRepository.findById(purchase.getId());
+            Optional<Purchase> productOptional = purchaseRepository.findById(purchase.getId());
             if(productOptional.isPresent()){
               BookDto books = bookFlags(productOptional.get());
               PurchaseDto purchaseDto = PurchaseDto.builder()
@@ -194,6 +194,7 @@ public class SupplierServiceImpl implements SupplierService {
             }
         }
         return purchaseDtoList;
+        return  null;
     }
     private BookDto bookFlags(Purchase purchase){
 

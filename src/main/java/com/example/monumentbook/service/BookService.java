@@ -23,11 +23,12 @@ public interface BookService {
     ResponseEntity<?> deleteBookOfTheWeek(RequestById requestById);
     ResponseEntity<?> deleteBestSell(RequestById requestById);
     ResponseEntity<?> deleteNewArrival(RequestById requestById);
-    ResponseEntity<?> getAllPurchase();
-    ResponseEntity<?> deletePurchase(Integer id);
+
     ResponseEntity<?> processCheckoutById(List<OrderItemRequest> orderItemRequest);
-    ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
-    ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest);
-    ResponseEntity<?> getPurchaseById(Integer id);
+//    ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
+//    ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest);
+//    ResponseEntity<?> getPurchaseById(Integer id);
+//    ResponseEntity<?> getAllPurchase();
+//    ResponseEntity<?> deletePurchase(Integer id);
     ResponseEntity<?> search(String filter, Integer pageNumber, Integer pageSize);
 }

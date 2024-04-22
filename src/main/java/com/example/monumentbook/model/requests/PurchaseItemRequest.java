@@ -1,19 +1,17 @@
 package com.example.monumentbook.model.requests;
 
+import com.example.monumentbook.model.dto.BookDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PurchaseRequest {
-    private float tax;
-    private String invoice;
-    private Integer supplier;
-    private List<PurchaseItemRequest> purchaseItemRequests;
+public class PurchaseItemRequest {
+    private int qty;
+    private float cost;
+    private Integer bookId;
 }

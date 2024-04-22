@@ -48,7 +48,7 @@ public class SecurityConfiguration {
                                         "/api/v1/supplier/**",
                                         "/api/v1/card/**",
                                         "/api/v1/cart/*",
-                                        "/api/v1/payment/**"
+                                        "/api/v1/purchase/**"
                                         )
                         .permitAll()
 //                                .requestMatchers("/api/v1/book/*").hasAnyAuthority(Role.USER.toString(),Role.ADMIN.toString())

@@ -6,12 +6,9 @@ import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.CategoryDto;
 import com.example.monumentbook.model.requests.BookRequest;
 import com.example.monumentbook.model.requests.OrderItemRequest;
-import com.example.monumentbook.model.requests.PurchaseRequest;
 import com.example.monumentbook.model.requests.RequestById;
 import com.example.monumentbook.model.responses.ApiResponse;
 import com.example.monumentbook.model.responses.BookResponse;
-import com.example.monumentbook.model.responses.BookSearchResult;
-import com.example.monumentbook.model.responses.PurchaseResponse;
 import com.example.monumentbook.repository.*;
 import com.example.monumentbook.service.BookService;
 import com.example.monumentbook.utilities.response.ResponseObject;
@@ -25,12 +22,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.sql.ClientInfoStatus;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +35,7 @@ public class BookServiceImp implements BookService {
     private final AuthorBookRepository authorBookRepository;
     private final BookCategoryRepository bookCategoryRepository;
     private final SupplierRepository supplierRepository;
-    private final ProductRepository productRepository;
+    private final PurchaseRepository purchaseRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
     
@@ -461,60 +455,60 @@ public class BookServiceImp implements BookService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-    @Override
-    @Transactional
-    public ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest) {
-
-        try {
-            Optional<Book> bookOptional = bookRepository.findById(purchaseRequest.getBook());
-            ResponseObject res = new ResponseObject();
-
-            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
-                Book book = Book.builder()
-                        .id(bookOptional.get().getId())
-                        .isbn(bookOptional.get().getIsbn())
-                        .title(bookOptional.get().getTitle())
-                        .description(bookOptional.get().getDescription())
-                        .coverImg(bookOptional.get().getCoverImg())
-                        .publisher(bookOptional.get().getPublisher())
-                        .publishDate(bookOptional.get().getPublishDate())
-                        .price(bookOptional.get().getPrice())
-                        .qty(bookOptional.get().getQty() + purchaseRequest.getQty())
-                        .deleted(bookOptional.get().isDeleted())
-                        .bestSell(bookOptional.get().isBestSell())
-                        .newArrival(bookOptional.get().isNewArrival())
-                        .ofTheWeek(bookOptional.get().isOfTheWeek())
-                        .build();
-                bookRepository.save(book);
-                Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
-
-                if (supplierOptional.isPresent()) {
-                    Purchase purchase = Purchase.builder()
-                            .tax(purchaseRequest.getTax())
-                            .invoice(purchaseRequest.getInvoice())
-                            .cost(purchaseRequest.getCost())
-                            .qty(purchaseRequest.getQty())
-                            .book(bookOptional.get())
-                            .date(LocalDate.now())
-                            .supplier(supplierOptional.get())
-                            .build();
-                    productRepository.save(purchase);
-
-                    res.setStatus(true);
-                    res.setMessage("add success!");
-                    res.setData(purchase);
-                }
-                return ResponseEntity.ok(res);
-            } else {
-                res.setStatus(false);
-                res.setMessage("add false!");
-                res.setData(null);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
+//    @Override
+//    @Transactional
+//    public ResponseEntity<?> purchaseById(PurchaseRequest purchaseRequest) {
+//
+//        try {
+//            Optional<Book> bookOptional = bookRepository.findById(purchaseRequest.getBook());
+//            ResponseObject res = new ResponseObject();
+//
+//            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
+//                Book book = Book.builder()
+//                        .id(bookOptional.get().getId())
+//                        .isbn(bookOptional.get().getIsbn())
+//                        .title(bookOptional.get().getTitle())
+//                        .description(bookOptional.get().getDescription())
+//                        .coverImg(bookOptional.get().getCoverImg())
+//                        .publisher(bookOptional.get().getPublisher())
+//                        .publishDate(bookOptional.get().getPublishDate())
+//                        .price(bookOptional.get().getPrice())
+//                        .qty(bookOptional.get().getQty() + purchaseRequest.getQty())
+//                        .deleted(bookOptional.get().isDeleted())
+//                        .bestSell(bookOptional.get().isBestSell())
+//                        .newArrival(bookOptional.get().isNewArrival())
+//                        .ofTheWeek(bookOptional.get().isOfTheWeek())
+//                        .build();
+//                bookRepository.save(book);
+//                Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
+//
+//                if (supplierOptional.isPresent()) {
+//                    Purchase purchase = Purchase.builder()
+//                            .tax(purchaseRequest.getTax())
+//                            .invoice(purchaseRequest.getInvoice())
+//                            .cost(purchaseRequest.getCost())
+//                            .qty(purchaseRequest.getQty())
+//                            .book(bookOptional.get())
+//                            .date(LocalDate.now())
+//                            .supplier(supplierOptional.get())
+//                            .build();
+//                    productRepository.save(purchase);
+//
+//                    res.setStatus(true);
+//                    res.setMessage("add success!");
+//                    res.setData(purchase);
+//                }
+//                return ResponseEntity.ok(res);
+//            } else {
+//                res.setStatus(false);
+//                res.setMessage("add false!");
+//                res.setData(null);
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        }
+//    }
 
     @Override
     public ResponseEntity<?> processCheckoutById(List<OrderItemRequest> orderItemRequests) {
@@ -715,132 +709,132 @@ public class BookServiceImp implements BookService {
         return BookFlags(requestById, "newArrival", false);
     }
 
-    @Override
-    public ResponseEntity<?> getAllPurchase() {
-        try {
-            List<Purchase> purchases = productRepository.findAll();
-            if (purchases.isEmpty()) {
-                ResponseObject res = new ResponseObject();
-                res.setMessage("No purchases found");
-                res.setStatus(false);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-            }
+//    @Override
+//    public ResponseEntity<?> getAllPurchase() {
+//        try {
+//            List<Purchase> purchases = productRepository.findAll();
+//            if (purchases.isEmpty()) {
+//                ResponseObject res = new ResponseObject();
+//                res.setMessage("No purchases found");
+//                res.setStatus(false);
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+//            }
+//
+//            List<PurchaseResponse> purchaseRespons = new ArrayList<>();
+//            for (Purchase purchase : purchases) {
+//                PurchaseResponse purchaseResponse = createProductResponse(purchase);
+//                purchaseRespons.add(purchaseResponse);
+//            }
+//
+//            ResponseObject res = new ResponseObject();
+//            res.setMessage("All purchases found");
+//            res.setStatus(true);
+//            res.setData(purchaseRespons);
+//            return ResponseEntity.ok(res);
+//        } catch (Exception e) {
+//            ResponseObject res = new ResponseObject();
+//            res.setMessage("Failed to fetch all purchases");
+//            res.setStatus(false);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+//        }
+//    }
 
-            List<PurchaseResponse> purchaseRespons = new ArrayList<>();
-            for (Purchase purchase : purchases) {
-                PurchaseResponse purchaseResponse = createProductResponse(purchase);
-                purchaseRespons.add(purchaseResponse);
-            }
 
-            ResponseObject res = new ResponseObject();
-            res.setMessage("All purchases found");
-            res.setStatus(true);
-            res.setData(purchaseRespons);
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            ResponseObject res = new ResponseObject();
-            res.setMessage("Failed to fetch all purchases");
-            res.setStatus(false);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-        }
-    }
-
-
-    @Override
-    public ResponseEntity<?> deletePurchase(Integer id) {
-        try {
-            Optional<Purchase> productOptional = productRepository.findById(id);
-            if (productOptional.isPresent()) {
-                Optional<Book> bookOptional = bookRepository.findById(productOptional.get().getBook().getId());
-                if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
-                    Book book = bookOptional.get();
-                    book.setQty(book.getQty() - productOptional.get().getQty());
-                    bookRepository.save(book);
-                }
-                productRepository.delete(productOptional.get());
-                ResponseObject res = new ResponseObject();
-                res.setMessage("Purchase deleted successfully");
-                res.setStatus(true);
-                res.setData(null);
-                return ResponseEntity.ok(res);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Purchase with ID: " + id + " not found");
-            }
-        } catch (Exception e) {
-            ResponseObject res = new ResponseObject();
-            res.setMessage("An error occurred while deleting the purchase");
-            res.setStatus(false);
-            res.setData(null);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest) {
-        try {
-            Optional<Purchase> productOptional = productRepository.findById(id);
-            if (productOptional.isPresent()) {
-                Optional<Book> bookOptional = bookRepository.findById(purchaseRequest.getBook());
-                if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
-                    Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
-                    if (supplierOptional.isPresent()) {
-                        Purchase purchase = productOptional.get();
-                        purchase.setTax(purchaseRequest.getTax());
-                        purchase.setInvoice(purchaseRequest.getInvoice());
-                        purchase.setCost(purchaseRequest.getCost());
-                        purchase.setQty(purchaseRequest.getQty());
-                        purchase.setDate(LocalDate.now());
-                        purchase.setSupplier(supplierOptional.get());
-                        purchase.setBook(bookOptional.get());
-                        Book book = bookOptional.get();
-                        book.setQty(book.getQty() + purchaseRequest.getQty() - purchase.getQty());
-                        bookRepository.save(book);
-                        productRepository.save(purchase);
-
-                        PurchaseResponse purchaseResponse = createProductResponse(purchase);
-                        ResponseObject res = new ResponseObject();
-                        res.setStatus(true);
-                        res.setMessage("Update success!");
-                        res.setData(purchaseResponse);
-                        return ResponseEntity.ok(res);
-                    } else {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                .body("Supplier with ID: " + purchaseRequest.getSupplier() + " not found");
-                    }
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("Book with ID: " + purchaseRequest.getBook() + " not found or deleted");
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Purchase with ID: " + id + " not found");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> getPurchaseById(Integer id) {
-        try {
-            ResponseObject res = new  ResponseObject();
-            Optional<Purchase> productOptional = productRepository.findById(id);
-            if (productOptional.isPresent()){
-                PurchaseResponse purchaseResponse = createProductResponse(productOptional.get());
-                res.setMessage("fetch all purchase found");
-                res.setStatus(true);
-                res.setData(purchaseResponse);
-            }
-            return ResponseEntity.ok(res);
-
-        } catch (Exception e) {
-            ResponseObject res = new  ResponseObject();
-            res.setMessage("fetch all purchase found");
-            res.setStatus(true);
-            res.setData(null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-        }
-    }
+//    @Override
+//    public ResponseEntity<?> deletePurchase(Integer id) {
+//        try {
+//            Optional<Purchase> productOptional = productRepository.findById(id);
+//            if (productOptional.isPresent()) {
+//                Optional<Book> bookOptional = bookRepository.findById(productOptional.get().getBook().getId());
+//                if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
+//                    Book book = bookOptional.get();
+//                    book.setQty(book.getQty() - productOptional.get().getQty());
+//                    bookRepository.save(book);
+//                }
+//                productRepository.delete(productOptional.get());
+//                ResponseObject res = new ResponseObject();
+//                res.setMessage("Purchase deleted successfully");
+//                res.setStatus(true);
+//                res.setData(null);
+//                return ResponseEntity.ok(res);
+//            } else {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body("Purchase with ID: " + id + " not found");
+//            }
+//        } catch (Exception e) {
+//            ResponseObject res = new ResponseObject();
+//            res.setMessage("An error occurred while deleting the purchase");
+//            res.setStatus(false);
+//            res.setData(null);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+//        }
+//    }
+//
+//    @Override
+//    public ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest) {
+//        try {
+//            Optional<Purchase> productOptional = productRepository.findById(id);
+//            if (productOptional.isPresent()) {
+//                Optional<Book> bookOptional = bookRepository.findById(purchaseRequest.getBook());
+//                if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
+//                    Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
+//                    if (supplierOptional.isPresent()) {
+//                        Purchase purchase = productOptional.get();
+//                        purchase.setTax(purchaseRequest.getTax());
+//                        purchase.setInvoice(purchaseRequest.getInvoice());
+//                        purchase.setCost(purchaseRequest.getCost());
+//                        purchase.setQty(purchaseRequest.getQty());
+//                        purchase.setDate(LocalDate.now());
+//                        purchase.setSupplier(supplierOptional.get());
+//                        purchase.setBook(bookOptional.get());
+//                        Book book = bookOptional.get();
+//                        book.setQty(book.getQty() + purchaseRequest.getQty() - purchase.getQty());
+//                        bookRepository.save(book);
+//                        productRepository.save(purchase);
+//
+//                        PurchaseResponse purchaseResponse = createProductResponse(purchase);
+//                        ResponseObject res = new ResponseObject();
+//                        res.setStatus(true);
+//                        res.setMessage("Update success!");
+//                        res.setData(purchaseResponse);
+//                        return ResponseEntity.ok(res);
+//                    } else {
+//                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                                .body("Supplier with ID: " + purchaseRequest.getSupplier() + " not found");
+//                    }
+//                } else {
+//                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                            .body("Book with ID: " + purchaseRequest.getBook() + " not found or deleted");
+//                }
+//            } else {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Purchase with ID: " + id + " not found");
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: " + e.getMessage());
+//        }
+//    }
+//
+//    @Override
+//    public ResponseEntity<?> getPurchaseById(Integer id) {
+//        try {
+//            ResponseObject res = new  ResponseObject();
+//            Optional<Purchase> productOptional = productRepository.findById(id);
+//            if (productOptional.isPresent()){
+//                PurchaseResponse purchaseResponse = createProductResponse(productOptional.get());
+//                res.setMessage("fetch all purchase found");
+//                res.setStatus(true);
+//                res.setData(purchaseResponse);
+//            }
+//            return ResponseEntity.ok(res);
+//
+//        } catch (Exception e) {
+//            ResponseObject res = new  ResponseObject();
+//            res.setMessage("fetch all purchase found");
+//            res.setStatus(true);
+//            res.setData(null);
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+//        }
+//    }
 
 
 
@@ -918,17 +912,17 @@ public class BookServiceImp implements BookService {
                 .categories(categoryObj)
                 .build();
     }
-    private PurchaseResponse createProductResponse(Purchase purchase){
-        return PurchaseResponse.builder()
-                .supplier(purchase.getSupplier().toDto())
-                .id(purchase.getId())
-                .invoice(purchase.getInvoice())
-                .tax(purchase.getTax())
-                .cost(purchase.getCost())
-                .qty(purchase.getQty())
-                .date(purchase.getDate())
-                .book(purchase.getBook().toDto())
-                .build();
-    }
+//    private PurchaseResponse createProductResponse(Purchase purchase){
+//        return PurchaseResponse.builder()
+//                .supplier(purchase.getSupplier().toDto())
+//                .id(purchase.getId())
+//                .invoice(purchase.getInvoice())
+//                .tax(purchase.getTax())
+//                .cost(purchase.getCost())
+//                .qty(purchase.getQty())
+//                .date(purchase.getDate())
+//                .book(purchase.getBook().toDto())
+//                .build();
+//    }
 
 }
