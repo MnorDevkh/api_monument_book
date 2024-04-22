@@ -18,14 +18,14 @@ public class PurchaseController {
     private final PurchaseService purchaseService;
     @GetMapping("/getAllPurchase")
     @Operation(summary = "get all vendor")
-    public ResponseEntity<?> getAllImport(){
-    return purchaseService.getAllPurchase();
+    public ResponseEntity<?> getAllImport(@Param("order id") Integer pageNumber,@Param("order id") Integer pageSize){
+    return purchaseService.getAllPurchase(pageNumber, pageSize);
 }
     @DeleteMapping("/deletePurchase")
     @Operation(summary = "delete import by vendor id")
-    public ResponseEntity<?> deleteImport(@Param(value = "vendor id")Integer id){
+    public ResponseEntity<?> deleteImport(@Param(value = "purchase id")Integer id){
 //        return bookService.deletePurchase(id);
-        return null;
+        return purchaseService.deletePurchase(id);
     }
     @PutMapping("/updatePurchase")
     @Operation(summary = "update import by vendor id")

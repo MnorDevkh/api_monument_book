@@ -4,7 +4,7 @@ import com.example.monumentbook.model.requests.PurchaseRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface PurchaseService {
-    ResponseEntity<?> getAllPurchase();
+    ResponseEntity<?> getAllPurchase(Integer pageNumber, Integer pageSize);
     ResponseEntity<?> deletePurchase(Integer id);
     ResponseEntity<?> getPurchaseById(Integer id);
     ResponseEntity<?> updatePurchase(Integer id, PurchaseRequest purchaseRequest);
