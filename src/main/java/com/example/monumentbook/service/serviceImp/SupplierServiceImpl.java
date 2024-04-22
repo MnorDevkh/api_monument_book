@@ -3,15 +3,14 @@ package com.example.monumentbook.service.serviceImp;
 import com.example.monumentbook.model.*;
 import com.example.monumentbook.model.dto.BookDto;
 import com.example.monumentbook.model.dto.PurchaseDto;
+import com.example.monumentbook.model.dto.PurchaseItemsDto;
 import com.example.monumentbook.model.requests.SupplierRequest;
 import com.example.monumentbook.model.responses.SupplierResponse;
-import com.example.monumentbook.repository.BookRepository;
-import com.example.monumentbook.repository.BookSupplierRepository;
-import com.example.monumentbook.repository.PurchaseRepository;
-import com.example.monumentbook.repository.SupplierRepository;
+import com.example.monumentbook.repository.*;
 import com.example.monumentbook.service.SupplierService;
 import com.example.monumentbook.utilities.response.ResponseObject;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +26,7 @@ public class SupplierServiceImpl implements SupplierService {
     private final BookRepository bookRepository;
     private final PurchaseRepository purchaseRepository;
     private final BookSupplierRepository bookSupplierRepository;
+    private final PurchaseItemRepository purchaseItemRepository;
 
     @Override
     public ResponseEntity<?> addSupplier(SupplierRequest supplierRequest) {
@@ -161,7 +161,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     private SupplierResponse supplierResponse(Supplier supplier) {
         List<SupplierResponse> supplierResponses = new ArrayList<>();
-        List<PurchaseDto> purchaseDtoList = productFlags(supplier);
+        List<PurchaseDto> purchaseDtoList = purchaseFlags(supplier);
         return SupplierResponse.builder()
                 .id(supplier.getId())
                 .name(supplier.getName())
@@ -173,46 +173,67 @@ public class SupplierServiceImpl implements SupplierService {
                 .date(LocalDate.now())
                 .build();
     }
-    private List<PurchaseDto> productFlags(Supplier supplier){
+    private List<PurchaseDto> purchaseFlags(Supplier supplier){
         System.out.println(supplier+"supplier");
         List<Purchase> purchaseList = purchaseRepository.findAllBySupplier(supplier);
         List<PurchaseDto> purchaseDtoList = new ArrayList<>();
 
         for(Purchase purchase : purchaseList){
-            Optional<Purchase> productOptional = purchaseRepository.findById(purchase.getId());
-            if(productOptional.isPresent()){
-              BookDto books = bookFlags(productOptional.get());
+            Optional<Purchase> purchaseOptional = purchaseRepository.findById(purchase.getId());
+            if(purchaseOptional.isPresent()){
+              List<PurchaseItemsDto> purchaseItemsDto = purchaseItemFlags(purchaseOptional.get());
               PurchaseDto purchaseDto = PurchaseDto.builder()
-                      .id(productOptional.get().getId())
-                      .tax(productOptional.get().getTax())
-                      .cost(productOptional.get().getCost())
-                      .qty(productOptional.get().getQty())
-                      .invoice(productOptional.get().getInvoice())
-                      .book(books)
+                      .id(purchaseOptional.get().getId())
+                      .tax(purchaseOptional.get().getTax())
+                      .invoice(purchaseOptional.get().getInvoice())
+                      .purchaseItemsDto(purchaseItemsDto)
                       .build();
               purchaseDtoList.add(purchaseDto);
             }
         }
         return purchaseDtoList;
-        return  null;
     }
-    private BookDto bookFlags(Purchase purchase){
 
-            Optional<Book> bookOptional = bookRepository.findById(purchase.getBook().getId());
-            if(bookOptional.isPresent()) {
-                BookDto bookDto = BookDto.builder()
-                        .id(bookOptional.get().getId())
-                        .title(bookOptional.get().getTitle())
-                        .isbn(bookOptional.get().getIsbn())
-                        .coverImg(bookOptional.get().getCoverImg())
-                        .description(bookOptional.get().getDescription()).price(bookOptional.get().getPrice())
-                        .qty(bookOptional.get().getQty())
-                        .publishDate(bookOptional.get().getPublishDate())
-                        .publisher(bookOptional.get().getPublisher())
-                        .build();
-                return bookDto;
+    private List<PurchaseItemsDto> purchaseItemFlags(Purchase purchase) {
+        List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
+        try {
+            List<PurchaseItems> purchaseItemsList = purchaseItemRepository.findByPurchaseId(purchase.getId());
+            for (PurchaseItems purchaseItems : purchaseItemsList) {
+                Optional<PurchaseItems> optionalPurchaseItems = purchaseItemRepository.findById(purchaseItems.getId());
+                optionalPurchaseItems.ifPresent(item -> {
+                    PurchaseItemsDto purchaseItemsDtoObj = PurchaseItemsDto.builder()
+                            .id(item.getId())
+                            .qty(item.getQty())
+                            .cost(item.getCost())
+                            .book(item.getBook().toDto())
+                            .build();
+                    purchaseItemsDtoList.add(purchaseItemsDtoObj);
+                });
             }
-        return null;
+        } catch (Exception e) {
+            // Handle exception appropriately, maybe log it
+            e.printStackTrace();
+        }
+        return purchaseItemsDtoList;
     }
+
+//    private BookDto bookFlags(Purchase purchase){
+//
+//            Optional<Book> bookOptional = bookRepository.findById(purchase.getBook().getId());
+//            if(bookOptional.isPresent()) {
+//                BookDto bookDto = BookDto.builder()
+//                        .id(bookOptional.get().getId())
+//                        .title(bookOptional.get().getTitle())
+//                        .isbn(bookOptional.get().getIsbn())
+//                        .coverImg(bookOptional.get().getCoverImg())
+//                        .description(bookOptional.get().getDescription()).price(bookOptional.get().getPrice())
+//                        .qty(bookOptional.get().getQty())
+//                        .publishDate(bookOptional.get().getPublishDate())
+//                        .publisher(bookOptional.get().getPublisher())
+//                        .build();
+//                return bookDto;
+//            }
+//        return null;
+//    }
 
 }

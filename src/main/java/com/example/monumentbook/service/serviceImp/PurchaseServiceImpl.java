@@ -64,6 +64,26 @@ public class PurchaseServiceImpl implements PurchaseService {
             if (purchaseItemsOptional.isPresent()) {
                 purchaseItemRepository.delete(purchaseItemsOptional.get());
             }
+            Optional<Book> bookOptional = bookRepository.findById(purchaseItemsOptional.get().getId());
+            if (bookOptional.isPresent()) {
+                Book book = Book.builder()
+                        .id(bookOptional.get().getId())
+                        .isbn(bookOptional.get().getIsbn())
+                        .title(bookOptional.get().getTitle())
+                        .description(bookOptional.get().getDescription())
+                        .coverImg(bookOptional.get().getCoverImg())
+                        .publisher(bookOptional.get().getPublisher())
+                        .publishDate(bookOptional.get().getPublishDate())
+                        .price(bookOptional.get().getPrice())
+                        .qty(bookOptional.get().getQty()  - purchaseItemsOptional.get().getQty() )
+                        .deleted(bookOptional.get().isDeleted())
+                        .bestSell(bookOptional.get().isBestSell())
+                        .newArrival(bookOptional.get().isNewArrival())
+                        .ofTheWeek(bookOptional.get().isOfTheWeek())
+                        .build();
+                bookRepository.save(book);
+            }
+
 
             return ResponseEntity.ok("delete success with id" + id);
         }catch (Exception e){
@@ -110,7 +130,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                             .id(purchase.getId())
                             .build();
                     List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
-                    for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getPurchaseItemRequests()) {
+                    for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getItemObj()) {
                         Optional<Book> bookOptional = bookRepository.findById(purchaseItemRequest.getBookId());
                         if (bookOptional.isPresent()) {
                             List<PurchaseItems> purchaseItemsByPurchase = purchaseItemRepository.findByPurchaseId(id);
@@ -185,7 +205,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                         .id(purchase.getId())
                         .build();
                 List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
-                for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getPurchaseItemRequests()) {
+                for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getItemObj()) {
                     Optional<Book> bookOptional = bookRepository.findById(purchaseItemRequest.getBookId());
                     if (bookOptional.isPresent()) {
                         PurchaseItems purchaseItemsObj = PurchaseItems.builder()

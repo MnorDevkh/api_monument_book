@@ -15,5 +15,5 @@ public class PurchaseRequest {
     private float tax;
     private String invoice;
     private Integer supplier;
-    private List<PurchaseItemRequest> purchaseItemRequests;
+    private List<PurchaseItemRequest> itemObj;
 }

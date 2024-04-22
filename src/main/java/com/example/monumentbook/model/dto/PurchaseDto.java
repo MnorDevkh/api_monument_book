@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class PurchaseDto {
     private Integer id;
-    private int qty;
-    private float cost;
-    private Integer invoice;
+    private String invoice;
     private float tax;
-    private BookDto book;
+    private List<PurchaseItemsDto> purchaseItemsDto;
 }
