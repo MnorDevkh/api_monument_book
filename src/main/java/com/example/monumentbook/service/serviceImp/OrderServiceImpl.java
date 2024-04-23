@@ -94,6 +94,8 @@ public class OrderServiceImpl implements OrderService {
                        .orderItem(orderItemResponses)
                        .phone(orderOptional.get().getPhone())
                        .address(orderOptional.get().getAddress())
+                       .price(orderOptional.get().getPrice())
+                       .qty(orderOptional.get().getQty())
                        .user(userDto)
                        .build();
                res.setStatus(true);
@@ -428,6 +430,8 @@ public class OrderServiceImpl implements OrderService {
                         .payment(paymentDto)
                         .orderItem(orderItemResponses)
                         .phone(order.getPhone())
+                        .qty(order.getQty())
+                        .price(order.getPrice())
                         .address(order.getAddress())
                         .user(userDto)
                         .build();

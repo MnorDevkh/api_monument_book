@@ -51,10 +51,6 @@ public class PurchaseServiceImpl implements PurchaseService {
                     purchaseResponses.add(purchasedResponse);
                 }
             }
-//            ResponseObject res = new ResponseObject();
-//            res.setMessage("All purchases found");
-//            res.setStatus(true);
-//            res.setData(purchaseResponses);
             ApiResponse res = new ApiResponse(true, "Fetch Purchase successful!", purchaseResponses, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -74,11 +70,6 @@ public class PurchaseServiceImpl implements PurchaseService {
                 Optional<PurchaseItems> purchaseItemsOptional = purchaseItemRepository.findById(purchaseItems.getId());
                 if (purchaseItemsOptional.isPresent()) {
                     purchaseItemRepository.delete(purchaseItemsOptional.get());
-                    Optional<Purchase> purchaseOptional = purchaseRepository.findById(id);
-                    if (purchaseOptional.isPresent()) {
-                        purchaseRepository.delete(purchaseOptional.get());
-                    }
-
                     Optional<Book> bookOptional = bookRepository.findById(purchaseItemsOptional.get().getBook().getId());
                     if (bookOptional.isPresent()) {
                         Book book = Book.builder()
@@ -99,10 +90,11 @@ public class PurchaseServiceImpl implements PurchaseService {
                         bookRepository.save(book);
                     }
                 }
-
             }
-
-
+            Optional<Purchase> purchaseOptional = purchaseRepository.findById(id);
+            if (purchaseOptional.isPresent()) {
+                purchaseRepository.delete(purchaseOptional.get());
+            }
             return ResponseEntity.ok("delete success with id" + id);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

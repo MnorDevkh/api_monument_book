@@ -30,6 +30,10 @@ public interface BookRepository extends JpaRepository<Book,Integer> {
     @Query("SELECT b FROM Book b WHERE b.deleted = false AND (b.title LIKE %:filter% OR b.isbn LIKE %:filter%)")
     Page<Object> findByDeletedFalseAndTitleOrIsbn(String filter, Pageable pageable);
 
+    Optional<Book> findByDeletedTrueAndIsbn(String isbn);
+
+    Optional<Book> findByDeletedFalseAndIsbn(String isbn);
+
 
 //
 

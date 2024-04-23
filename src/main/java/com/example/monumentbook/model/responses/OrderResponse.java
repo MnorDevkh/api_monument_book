@@ -30,6 +30,8 @@ public class OrderResponse {
     private String phone;
     private PaymentDto payment;
     private String address;
+    private Integer qty;
+    private float price;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserDto user;
 }

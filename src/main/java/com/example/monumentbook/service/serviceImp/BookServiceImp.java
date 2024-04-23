@@ -38,7 +38,7 @@ public class BookServiceImp implements BookService {
     private final PurchaseRepository purchaseRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
-    
+
     @Override
     public ResponseEntity<?> findAllBook(Integer pageNumber, Integer pageSize, String sortBy, boolean ascending) {
         try {
@@ -92,14 +92,15 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-                ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
-                return ResponseEntity.ok(res);
+            ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements());
+            return ResponseEntity.ok(res);
 
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
     @Override
     public ResponseEntity<?> search(String filter, Integer pageNumber, Integer pageSize) {
         try {
@@ -158,7 +159,7 @@ public class BookServiceImp implements BookService {
                 }
             }
 
-            ApiResponse res = new ApiResponse(true,"Fetch books successful!", bookObj,pageResult.getNumber() + 1,pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements()
+            ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), pageResult.getTotalElements()
             );
             return ResponseEntity.ok(res);
         } catch (Exception e) {
@@ -234,15 +235,42 @@ public class BookServiceImp implements BookService {
     @Transactional
     public ResponseEntity<?> saveBook(BookRequest bookRequest) {
         try {
-            Book book = Book.builder()
-                    .isbn(bookRequest.getIsbn())
-                    .title(bookRequest.getTitle())
-                    .description(bookRequest.getDescription())
-                    .coverImg(bookRequest.getCoverImg())
-                    .publisher(bookRequest.getPublisher())
-                    .publishDate(bookRequest.getPublishDate())
-                    .price(bookRequest.getPrice())
-                    .build();
+            Optional<Book> bookOptional = bookRepository.findByDeletedTrueAndIsbn(bookRequest.getIsbn());
+            Book book = null;
+            if (bookOptional.isPresent()) {
+                book = Book.builder()
+                        .id(bookOptional.get().getId())
+                        .isbn(bookRequest.getIsbn())
+                        .title(bookRequest.getTitle())
+                        .description(bookRequest.getDescription())
+                        .coverImg(bookRequest.getCoverImg())
+                        .publisher(bookRequest.getPublisher())
+                        .publishDate(bookRequest.getPublishDate())
+                        .price(bookRequest.getPrice())
+                        .deleted(false)
+                        .build();
+            } else {
+                Optional<Book> bookOptionals = bookRepository.findByDeletedFalseAndIsbn(bookRequest.getIsbn());
+                if (bookOptionals.isPresent()){
+                    ResponseObject res = new ResponseObject();
+                    res.setData(null);
+                    res.setStatus(false);
+                    res.setMessage("add new book error deprecate Isbn");
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(res);
+                }else {
+                    book = Book.builder()
+                            .isbn(bookRequest.getIsbn())
+                            .title(bookRequest.getTitle())
+                            .description(bookRequest.getDescription())
+                            .coverImg(bookRequest.getCoverImg())
+                            .publisher(bookRequest.getPublisher())
+                            .publishDate(bookRequest.getPublishDate())
+                            .price(bookRequest.getPrice())
+                            .build(); 
+                   
+                }
+                
+            }
             bookRepository.save(book);
             List<AuthorBook> authorBookList = new ArrayList<>();
             for (Integer author : bookRequest.getAuthorId()) {
@@ -422,6 +450,7 @@ public class BookServiceImp implements BookService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
     @Override
     public ResponseEntity<?> DeleteById(Integer id) {
         try {
@@ -458,84 +487,24 @@ public class BookServiceImp implements BookService {
 
     @Override
     public ResponseEntity<?> processCheckoutById(List<OrderItemRequest> orderItemRequests) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser;
-        if (authentication.getPrincipal() instanceof User) {
-            currentUser = (User) authentication.getPrincipal();
-        } else {
-            // Handle the case when the principal is not an instance of User
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
-        }
-
-        List<Object> responses = new ArrayList<>(); // List to store individual responses
-
-        for (OrderItemRequest orderItemRequest : orderItemRequests) {
-            ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest);
-            responses.add(response.getBody()); // Add the response body to the list
-        }
-        return ResponseEntity.ok(responses); // Return the list of responses
-    }
-
-    private ResponseEntity<?> processCustomerRequest(User currentUser, OrderItemRequest orderItemRequest) {
-//        try {
-//            Integer id = orderItemRequest.getProductId();
-//            Optional<Book> bookOptional = bookRepository.findById(id);
-//            if (bookOptional.isPresent() && !bookOptional.get().isDeleted()) {
-//                Book book = bookOptional.get();
-//                int requestedQty = orderItemRequest.getQty();
-//                int availableQty = book.getQty();
-//                if (requestedQty <= availableQty) {
-//                    book.setQty(availableQty - requestedQty);
-//                    bookRepository.save(book);
-//                    OrderItem order = OrderItem.builder()
-//                            .bookId(bookOptional.get())
-//                            .userId(currentUser)
-//                            .qty(requestedQty)
-//                            .price(book.getPrice())
-//                            .date(LocalDate.now())
-//                            .build();
-//                    orderRepository.save(order);
-//                    try {
-//                        ResponseObject res = new ResponseObject();
-//                        Optional<Cart> cartOptional = cartRepository.findById(id);
-//                        if (cartOptional.isPresent()) {
-//                            Cart cart = cartOptional.get();
-//                            cartRepository.delete(cart);
-//                            res.setMessage("Deleted cart with id " + id);
-//                            res.setStatus(true);
-//                            res.setData(null);
-//                            return ResponseEntity.ok(res);
-//                        } else {
-//                            res.setMessage("Cart with id " + id + " not found");
-//                            res.setStatus(false);
-//                            res.setData(null);
-//                            return ResponseEntity.notFound().build();
-//                        }
-//                    } catch (Exception e) {
-//                        ResponseObject res = new ResponseObject();
-//                        res.setMessage("Failed to delete cart with id " + id);
-//                        res.setStatus(false);
-//                        res.setData(e);
-//                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-//                    }
-//
-//                } else {
-//                    ResponseObject res = new ResponseObject();
-//                    res.setMessage("Requested quantity exceeds available quantity");
-//                    res.setStatus(false);
-//                    res.setData(null);
-//
-//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
-//                }
-//            } else {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found or deleted");
-//            }
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User currentUser;
+//        if (authentication.getPrincipal() instanceof User) {
+//            currentUser = (User) authentication.getPrincipal();
+//        } else {
+//            // Handle the case when the principal is not an instance of User
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
 //        }
+//
+//        List<Object> responses = new ArrayList<>(); // List to store individual responses
+//
+//        for (OrderItemRequest orderItemRequest : orderItemRequests) {
+//            ResponseEntity<?> response = processCustomerRequest(currentUser, orderItemRequest);
+//            responses.add(response.getBody()); // Add the response body to the list
+//        }
+//        return ResponseEntity.ok(responses); // Return the list of responses
         return null;
     }
-
 
     //get book of the week
     @Override
@@ -553,14 +522,15 @@ public class BookServiceImp implements BookService {
                     bookObj.add(bookResponse);
                 }
             }
-                ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
-                return ResponseEntity.ok(res);
+            ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
+            return ResponseEntity.ok(res);
 
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
     @Override
     public ResponseEntity<?> getBestSell(Integer page, Integer size) {
         try {
@@ -577,8 +547,8 @@ public class BookServiceImp implements BookService {
                 }
             }
 
-                ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
-                return ResponseEntity.ok(res);
+            ApiResponse res = new ApiResponse(true, "Fetch books successful!", bookObj, pageResult.getNumber() + 1, pageResult.getSize(), pageResult.getTotalPages(), bookObj.size());
+            return ResponseEntity.ok(res);
 
 
         } catch (Exception e) {
@@ -622,9 +592,9 @@ public class BookServiceImp implements BookService {
                 }
             }
 
-                bookRepository.saveAll(updatedBooks);
-                ApiResponse res = new ApiResponse(true, "Update books success!", updatedBooks, 0, 0, 0, 0);
-                return ResponseEntity.ok(res);
+            bookRepository.saveAll(updatedBooks);
+            ApiResponse res = new ApiResponse(true, "Update books success!", updatedBooks, 0, 0, 0, 0);
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -640,9 +610,10 @@ public class BookServiceImp implements BookService {
         }
         return book;
     }
+
     @Override
     public ResponseEntity<?> deleteBookOfTheWeek(RequestById requestById) {
-        return BookFlags(requestById, "ofTheWeek",false);
+        return BookFlags(requestById, "ofTheWeek", false);
     }
 
     @Override
@@ -668,7 +639,7 @@ public class BookServiceImp implements BookService {
 
     @Override
     public ResponseEntity<?> addNewArrival(RequestById requestById) {
-        return BookFlags(requestById, "newArrival",  true);
+        return BookFlags(requestById, "newArrival", true);
     }
 
 
@@ -690,7 +661,8 @@ public class BookServiceImp implements BookService {
         }
         return categoryObj;
     }
-//    fun get Author
+
+    //    fun get Author
     private List<AuthorDto> getAuthorsByBookId(Book bookId) {
         List<AuthorDto> authorObj = new ArrayList<>();
         List<AuthorBook> categoryByBook = authorBookRepository.findAllByBook(bookId);
