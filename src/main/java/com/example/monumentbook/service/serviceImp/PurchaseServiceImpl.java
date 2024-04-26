@@ -65,7 +65,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     public ResponseEntity<?> deletePurchase(Integer id) {
         try {
             List<PurchaseItems> purchaseItemsByPurchase = purchaseItemRepository.findByPurchaseId(id);
-            System.out.println("purchaseItemsByPurchase" + purchaseItemsByPurchase);
+//            System.out.println("purchaseItemsByPurchase" + purchaseItemsByPurchase);
             for (PurchaseItems purchaseItems : purchaseItemsByPurchase) {
                 Optional<PurchaseItems> purchaseItemsOptional = purchaseItemRepository.findById(purchaseItems.getId());
                 if (purchaseItemsOptional.isPresent()) {
@@ -106,6 +106,8 @@ public class PurchaseServiceImpl implements PurchaseService {
         ResponseObject res = new ResponseObject();
         try {
             Optional<Purchase> purchaseOptional = purchaseRepository.findById(id);
+
+//            System.out.println(purchaseOptional.get().toString()+"000000000000000000000000000000000000");
             PurchaseResponse purchaseResponse = purchaseResponse(purchaseOptional.get());
             res.setMessage("add purchase successful");
             res.setStatus(true);
@@ -126,68 +128,75 @@ public class PurchaseServiceImpl implements PurchaseService {
             ResponseObject res = new ResponseObject();
             if (purchaseOptional.isPresent()) {
                 Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
-
+                List<PurchaseItems> purchaseItems = new ArrayList<>();
                 if (supplierOptional.isPresent()) {
+                    for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getItemObj()) {
+                        PurchaseItems purchaseItemsObj = PurchaseItems.builder()
+                                .qty(purchaseItemRequest.getQty())
+                                .cost(purchaseItemRequest.getCost())
+                                .purchase(purchaseOptional.get())
+                                .book(Book.builder()
+                                        .id(purchaseItemRequest.getBookId()).build())
+                                .build();
+                        purchaseItems.add(purchaseItemsObj);
+                        Optional<Book> bookOptional = bookRepository.findById(purchaseItemRequest.getBookId());
+                        if (bookOptional.isPresent()) {
+//                            for (PurchaseItems purchaseItems1 : purchase.getPurchaseItems()) {
+//                                Optional<PurchaseItems> purchaseItemsOptional = purchaseItemRepository.findById(purchaseItems1.getId());
+//                                if (purchaseItemsOptional.isPresent()) {
+//                                    PurchaseItems purchaseItemsObj = PurchaseItems.builder()
+//                                            .id(purchaseItemsOptional.get().getId())
+//                                            .qty(purchaseItemRequest.getQty())
+//                                            .cost(purchaseItemRequest.getCost())
+//                                            .book(bookOptional.get())
+//                                            .purchase(purchase1)
+//                                            .build();
+//                                    purchaseItemRepository.save(purchaseItemsObj);
+//                                    purchaseItems.add(purchaseItemsObj);
+//                                }
+//                                Book book = Book.builder()
+//                                        .id(bookOptional.get().getId())
+//                                        .isbn(bookOptional.get().getIsbn())
+//                                        .title(bookOptional.get().getTitle())
+//                                        .description(bookOptional.get().getDescription())
+//                                        .coverImg(bookOptional.get().getCoverImg())
+//                                        .publisher(bookOptional.get().getPublisher())
+//                                        .publishDate(bookOptional.get().getPublishDate())
+//                                        .price(bookOptional.get().getPrice())
+//                                        .qty(bookOptional.get().getQty() + purchaseItemRequest.getQty() - purchaseItemsOptional.get().getQty())
+//                                        .deleted(bookOptional.get().isDeleted())
+//                                        .bestSell(bookOptional.get().isBestSell())
+//                                        .newArrival(bookOptional.get().isNewArrival())
+//                                        .ofTheWeek(bookOptional.get().isOfTheWeek())
+//                                        .build();
+//
+//                                bookRepository.save(book);
+////                                ResponseEntity<?> purchaseResponseItem = purchaseResponseItem(purchaseItems1);
+////                                PurchaseItemsDto purchaseItemsDto = (PurchaseItemsDto) purchaseResponseItem.getBody();
+////                                purchaseItems.add(purchaseItems1);
+//                            }
+
+                        }
+
+
+                    }
+
                     Purchase purchase = Purchase.builder()
                             .id(id)
                             .tax(purchaseRequest.getTax())
                             .invoice(purchaseRequest.getInvoice())
                             .supplier(supplierOptional.get())
+                            .purchaseItems(purchaseItems)
                             .date(LocalDate.now())
                             .build();
+//                    System.out.println(purchase.getPurchaseItems() + "=============================");
                     purchaseRepository.save(purchase);
-                    Purchase purchase1 = Purchase.builder()
-                            .id(purchase.getId())
-                            .build();
-                    List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
-                    for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getItemObj()) {
-                        Optional<Book> bookOptional = bookRepository.findById(purchaseItemRequest.getBookId());
-                        if (bookOptional.isPresent()) {
-                            List<PurchaseItems> purchaseItemsByPurchase = purchaseItemRepository.findByPurchaseId(id);
-                            System.out.println("purchaseItemsByPurchase" + purchaseItemsByPurchase);
-                            for (PurchaseItems purchaseItems : purchaseItemsByPurchase) {
-                                System.out.println("purchaseItems" + purchaseItems);
-                                Optional<PurchaseItems> purchaseItemsOptional = purchaseItemRepository.findById(purchaseItems.getId());
-                                if (purchaseItemsOptional.isPresent()) {
-                                    System.out.println("purchaseItemsOptional" + purchaseItemsOptional.get());
-                                    purchaseItemRepository.delete(purchaseItemsOptional.get());
-                                }
-                                PurchaseItems purchaseItemsObj = PurchaseItems.builder()
-                                        .qty(purchaseItemRequest.getQty())
-                                        .cost(purchaseItemRequest.getCost())
-                                        .book(bookOptional.get())
-                                        .purchase(purchase1)
-                                        .build();
-                                purchaseItemRepository.save(purchaseItemsObj);
-                                Book book = Book.builder()
-                                        .id(bookOptional.get().getId())
-                                        .isbn(bookOptional.get().getIsbn())
-                                        .title(bookOptional.get().getTitle())
-                                        .description(bookOptional.get().getDescription())
-                                        .coverImg(bookOptional.get().getCoverImg())
-                                        .publisher(bookOptional.get().getPublisher())
-                                        .publishDate(bookOptional.get().getPublishDate())
-                                        .price(bookOptional.get().getPrice())
-                                        .qty(bookOptional.get().getQty() + purchaseItemRequest.getQty() - purchaseItemsOptional.get().getQty())
-                                        .deleted(bookOptional.get().isDeleted())
-                                        .bestSell(bookOptional.get().isBestSell())
-                                        .newArrival(bookOptional.get().isNewArrival())
-                                        .ofTheWeek(bookOptional.get().isOfTheWeek())
-                                        .build();
-                                bookRepository.save(book);
-                                ResponseEntity<?> purchaseResponseItem = purchaseResponseItem(purchaseItemsObj);
-                                PurchaseItemsDto purchaseItemsDto = (PurchaseItemsDto) purchaseResponseItem.getBody();
-                                purchaseItemsDtoList.add(purchaseItemsDto);
-                            }
-
-                        }
-                        Optional<Purchase> purchases = purchaseRepository.findById(purchase.getId());
-                        PurchaseResponse purchaseResponse = purchaseResponse(purchases.get());
-                        res.setMessage("add purchase successful");
-                        res.setStatus(true);
-                        res.setData(purchaseResponse);
-
-                    }
+                    Optional<Purchase> purchases = purchaseRepository.findById(id);
+//                    System.out.println(purchases.get().toString()+"111111111111111111111111111111111111");
+                    PurchaseResponse purchaseResponse = purchaseResponse(purchases.get());
+                    res.setMessage("add purchase successful");
+                    res.setStatus(true);
+                    res.setData(purchaseResponse);
                 }
 
             }
@@ -203,18 +212,19 @@ public class PurchaseServiceImpl implements PurchaseService {
         try {
             Optional<Supplier> supplierOptional = supplierRepository.findById(purchaseRequest.getSupplier());
             ResponseObject res = new ResponseObject();
+            List<PurchaseItems> purchaseItems = new ArrayList<>();
             if (supplierOptional.isPresent()) {
                 Purchase purchase = Purchase.builder()
                         .tax(purchaseRequest.getTax())
                         .invoice(purchaseRequest.getInvoice())
                         .supplier(supplierOptional.get())
+                        .purchaseItems(purchaseItems)
                         .date(LocalDate.now())
                         .build();
                 purchaseRepository.save(purchase);
                 Purchase purchase1 = Purchase.builder()
                         .id(purchase.getId())
                         .build();
-                List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
                 for (PurchaseItemRequest purchaseItemRequest : purchaseRequest.getItemObj()) {
                     Optional<Book> bookOptional = bookRepository.findById(purchaseItemRequest.getBookId());
                     if (bookOptional.isPresent()) {
@@ -241,9 +251,9 @@ public class PurchaseServiceImpl implements PurchaseService {
                                 .ofTheWeek(bookOptional.get().isOfTheWeek())
                                 .build();
                         bookRepository.save(book);
-                        ResponseEntity<?> purchaseResponseItem = purchaseResponseItem(purchaseItemsObj);
-                        PurchaseItemsDto purchaseItemsDto = (PurchaseItemsDto) purchaseResponseItem.getBody();
-                        purchaseItemsDtoList.add(purchaseItemsDto);
+//                        ResponseEntity<?> purchaseResponseItem = purchaseResponseItem(purchaseItemsObj);
+//                        PurchaseItemsDto purchaseItemsDto = (PurchaseItemsDto) purchaseResponseItem.getBody();
+                        purchaseItems.add(purchaseItemsObj);
 
                     }
                 }
@@ -263,9 +273,8 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     private PurchaseResponse purchaseResponse(Purchase purchases) {
-        List<PurchaseItems> purchaseItemsList = purchaseItemRepository.findByPurchaseId(purchases.getId());
         List<PurchaseItemsDto> purchaseItemsDtoList = new ArrayList<>();
-        for (PurchaseItems purchaseItems : purchaseItemsList) {
+        for (PurchaseItems purchaseItems : purchases.getPurchaseItems()) {
             Optional<PurchaseItems> purchaseItemsOptional = purchaseItemRepository.findById(purchaseItems.getId());
             if (purchaseItemsOptional.isPresent()) {
                 PurchaseItemsDto purchaseItemsDto = PurchaseItemsDto.builder()
@@ -278,6 +287,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             }
 
         }
+
         return PurchaseResponse.builder()
                 .id(purchases.getId())
                 .date(purchases.getDate())
